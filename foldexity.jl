@@ -71,7 +71,7 @@ end
 
 
 function kabsh_matrix(megax)    
-    n = size(megax)[1]  # Change this to the desired size
+    n = size(megax)[1]  
     matrix = zeros(Float64, n, n)
 
     for i = 1:n # Fill the upper triangle
@@ -88,3 +88,4 @@ pdb_file  = ARGS[1]
 
 megax = slicematrix(pdb2matrix(pdb_file))
 print(kabsh_matrix(megax))
+
