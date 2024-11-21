@@ -12,7 +12,7 @@ function pdb2matrix(pdb_file::String)
             push!(y, parse(Float64,strip(line[39:46])))
             push!(z, parse(Float64,strip(line[47:54])))
         end
-        if startswith(line, "TER")
+        if startswith(line, "ENDMDL")
             break
         end
     end
@@ -73,30 +73,57 @@ function matrix2fragments(matrix, wsize=5)
     return megam
 end
 
-function kabsh_matrix(megax)    
-    n = size(megax)[1]  # Change this to the desired size
-    matrix = zeros(Float64, n, n)
 
-    for i = 1:n # Fill the upper triangle
-        for j = i+1:n  # Ensure j >= i for the upper triangle
-            matrix[i, j] = kabsch(megax[i], megax[j])
+
+function kabsh_matrix(megax)    
+    try        
+        n = size(megax)[1]  # Change this to the desired size
+        matrix = zeros(Float64, n, n)
+
+        for i = 1:n # Fill the upper triangle
+            for j = i+1:n  # Ensure j >= i for the upper triangle
+                matrix[i, j] = kabsch(megax[i], megax[j])
+            end
         end
+        return sum(matrix)/(n*n)
+    catch 
+        return 0
     end
-    return sum(matrix)/(n*n)
 end
+
+
+
+function fxdir(dirpath, printon = false)
+    i = 1
+    data = []
+    for (root, dirs, files) in walkdir(dirpath)
+            for file in files
+                    try
+                        filepath = joinpath(root, file)
+                        megax = matrix2fragments(pdb2matrix(filepath), 4)
+                        nres = size(megax)[1]
+                        fxity = kabsh_matrix(megax)
+                        push!(data, [i,filepath,fxity,nres])
+                        if printon
+                        println("$i    $filepath   $fxity  $nres")
+                        end
+                    catch e
+                        push!(data, [i,filepath, 0, 0])
+                        if printon
+                                println("$i   $filepath  0  0")
+                        end
+                    end
+                    i+=1
+            
+            end
+    end
+    return(data)
+end
+
+
+
 
 pdbdir  = ARGS[1]
 
-i = 0
-for file in glob("$pdbdir/*/*.ent")
-        try
-     #           print("$i "); i+=1
-                megax = matrix2fragments(pdb2matrix(file), 4)
-                nres = size(megax)[1]
-                fxity = kabsh_matrix(megax)
-                println("$file $fxity $nres")
-        catch e
-                println("$file NA $nres")
-        end
-end
+data = fxdir(pdbdir, true)
 
