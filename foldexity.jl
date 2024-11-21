@@ -1,5 +1,6 @@
 using LinearAlgebra
 using Statistics
+using Glob
 
 
 function pdb2matrix(pdb_file::String)
@@ -10,6 +11,9 @@ function pdb2matrix(pdb_file::String)
             push!(x, parse(Float64,strip(line[31:38])))
             push!(y, parse(Float64,strip(line[39:46])))
             push!(z, parse(Float64,strip(line[47:54])))
+        end
+        if startswith(line, "TER")
+            break
         end
     end
     m = hcat(x,y,z)
@@ -63,29 +67,36 @@ function kabsch(m1,m2)
     return RMSD_value
 end
 
-function slicematrix(matrix, wsize=5)
+function matrix2fragments(matrix, wsize=5)
     msize = size(matrix)[1]-wsize
     megam = [matrix[i:i+wsize,:] for i in 1:msize]
     return megam
 end
 
-
 function kabsh_matrix(megax)    
-    n = size(megax)[1]  
+    n = size(megax)[1]  # Change this to the desired size
     matrix = zeros(Float64, n, n)
 
     for i = 1:n # Fill the upper triangle
-        for j = i:n  # Ensure j >= i for the upper triangle
+        for j = i+1:n  # Ensure j >= i for the upper triangle
             matrix[i, j] = kabsch(megax[i], megax[j])
         end
     end
-    return matrix
+    return sum(matrix)/(n*n)
 end
 
+pdbdir  = ARGS[1]
 
-pdb_file  = ARGS[1]
-
-
-megax = slicematrix(pdb2matrix(pdb_file))
-print(kabsh_matrix(megax))
+i = 0
+for file in glob("$pdbdir/*/*.ent")
+        try
+     #           print("$i "); i+=1
+                megax = matrix2fragments(pdb2matrix(file), 4)
+                nres = size(megax)[1]
+                fxity = kabsh_matrix(megax)
+                println("$file $fxity $nres")
+        catch e
+                println("$file NA $nres")
+        end
+end
 
