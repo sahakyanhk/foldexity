@@ -1,9 +1,15 @@
 ToDo:
     ☐ Clustering algorithm
-    ✔ Import functions @done (11/27/2024, 11:28:19 PM)
-        ✔ to jupyter @done (11/27/2024, 10:20:22 PM)
-        ✔ to main script @done (11/27/2024, 11:28:18 PM)
-Done:
-    
+        ☐ UPGMA tree with cutoff
+        ☐ counts with rmsd cutoff
+        ☐ linclust
+    ☐ Plots and analyses
+        ☐ fxity distribution
+        ☐ backbone visualizaiton in plotly
+    ☐ TM-score
+    Done:
+        ✔ Import functions @done (11/27/2024, 11:28:19 PM)
+            ✔ to jupyter @done (11/27/2024, 10:20:22 PM)
+            ✔ to main script @done (11/27/2024, 11:28:18 PM)
 
-    
+
