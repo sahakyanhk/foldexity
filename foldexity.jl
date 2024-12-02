@@ -10,7 +10,7 @@ function fxdir(dirpath, printdata = false)
                     try     
                             pdbpath = joinpath(root, file)
                             pdb = readpdb(pdbpath)
-                            coordmatrix = hcat(pdb.x, pdb.y, pdb.z)
+                            coordmatrix = pdb2matrix(pdb)
                             megax = matrix2fragments(coordmatrix, 4)
                             nres = size(megax)[1]
                             fxity = kabsh_matrix(megax)
@@ -34,7 +34,7 @@ end
 #calculate fxity a pdb file
 function fxpdb(pdbpath)
     pdb = readpdb(pdbpath)
-    coordmatrix = hcat(pdb.x, pdb.y, pdb.z)
+    coordmatrix = pdb2matrix(pdb)
     megax = matrix2fragments(coordmatrix, 4)
     nfrags = size(megax)[1]
     fxity = kabsh_matrix(megax)
