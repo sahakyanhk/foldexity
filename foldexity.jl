@@ -40,13 +40,13 @@ function fxdir(dirpath, outfile = "fxdata.tsv", printdata = false)
         try     
             pdb = readpdb(pdbpath)
             coordmatrix = pdb2matrix(pdb)
-            megax = matrix2fragments(coordmatrix, 4)
+            megax = matrix2fragments(coordmatrix, 12)
             nres = size(megax)[1]
             fxity, m = fxity_kabsh(megax)
             data = "$i\t$pdbpath\t$fxity\t$nres\n"
             push!(data_collector, data)
         catch 
-            push!(data_collector, "$i\t$pdbpath\tNA\tNA\n")
+            push!(data_collector, "$i\t$pdbpath\t\t\n")
 
             println("Warrning: no data for $pdbpath")
         end
@@ -81,9 +81,10 @@ end
 if abspath(PROGRAM_FILE) == @__FILE__
 
     inputpath = ARGS[1]
+    outpath = ARGS[2]
 
     if isdir(inputpath)
-        data = fxdir(inputpath, "fxdata.tsv", true)  
+        data = fxdir(inputpath, outpath, false)  
     elseif isfile(inputpath)
         fxity, nfrags = fxpdb(inputpath)  
         println("$inputpath        $fxity       $nfrags")  
