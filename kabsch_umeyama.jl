@@ -46,7 +46,7 @@ end
 
 
 #calculate all-vs-all kabsch rmsd for fragments in the matrix
-function kabsh_matrix(megax)    
+function fxity_kabsh(megax)    
     try        
         n = size(megax)[1]  # Change this to the desired size
         matrix = zeros(Float64, n, n)
@@ -56,12 +56,10 @@ function kabsh_matrix(megax)
                 matrix[i, j] = align_rmsd(megax[i], megax[j])
             end
         end
-        return sum(matrix) * 2 / n
+        return sum(matrix) * 2 / (n * n) , matrix
         
     catch 
         return 0
     end
 end
-
-
 
