@@ -13,7 +13,7 @@ function fxpdb(pdbpath)
 end
 
 #calculate fxity for all pdb files in the directory
-function fxdir(dirpath, outfile = "fxdata.tsv", printdata = false)
+function fxdir(dirpath, outfile = "fxdata.tsv", fsize=12, printdata = false)
     
     pdbpaths = []
     for (root, _, files) in walkdir(dirpath)
@@ -32,7 +32,7 @@ function fxdir(dirpath, outfile = "fxdata.tsv", printdata = false)
 
     # Thread-safe writing to the output file
     open(outfile, "w") do f 
-        write(f, "#ndx\tpdbpath\tfxity\tnfrags\n" )
+        write(f, "ndx\tpdbpath\tfxity\tnfrags\n" )
     end
 
     #start loop with muptithreading
@@ -40,7 +40,7 @@ function fxdir(dirpath, outfile = "fxdata.tsv", printdata = false)
         try     
             pdb = readpdb(pdbpath)
             coordmatrix = pdb2matrix(pdb)
-            megax = matrix2fragments(coordmatrix, 12)
+            megax = matrix2fragments(coordmatrix, fsize)
             nres = size(megax)[1]
             fxity, m = fxity_kabsh(megax)
             data = "$i\t$pdbpath\t$fxity\t$nres\n"
@@ -82,9 +82,10 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
     inputpath = ARGS[1]
     outpath = ARGS[2]
+    #fsize = ARGS[3]
 
     if isdir(inputpath)
-        data = fxdir(inputpath, outpath, false)  
+        data = fxdir(inputpath, outpath, 16)  
     elseif isfile(inputpath)
         fxity, nfrags = fxpdb(inputpath)  
         println("$inputpath        $fxity       $nfrags")  
@@ -93,3 +94,4 @@ if abspath(PROGRAM_FILE) == @__FILE__
     end
 
 end
+

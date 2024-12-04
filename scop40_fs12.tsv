@@ -7809,7 +7809,7 @@ ndx	pdbpath	fxity	nfrags
 7809	../scop40/ek/d1ekga_.ent	29.16477237449827	108
 7810	../scop40/qb/d1qbkb_.ent	18.60800459449609	845
 7811	../scop40/qc/d1qc7a_.ent	17.40065979733491	90
-7812	../scop40/qc/d1qcrd2.ent	NaN	0
+7812	../scop40/qc/d1qcrd2.ent		
 7813	../scop40/qc/d1qcsa1.ent	25.743638519431762	73
 7814	../scop40/qc/d1qcsa2.ent	28.811922180425814	95
 7815	../scop40/ek/d1ekja_.ent	24.29488170412057	199
