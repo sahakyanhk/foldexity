@@ -8,6 +8,7 @@ ToDo:
         ☐ fxity distribution
         ☐ backbone visualizaiton in plotly
     ☐ TM-score
+    ☐ make a subset of scop40 for fast testing (cluster with foldseek)
     Done:
         ✔ Import functions @done (11/27/2024, 11:28:19 PM)
             ✔ to jupyter @done (11/27/2024, 10:20:22 PM)

@@ -1,5 +1,6 @@
 using LinearAlgebra
 using Statistics
+using Clustering
 
 #kabsch-umeyama
 function translate_to_centroid(coord_matrix)
@@ -48,7 +49,7 @@ end
 #calculate all-vs-all kabsch rmsd for fragments in the matrix
 function fxity_kabsh(megax)    
     try        
-        n = size(megax)[1]  # Change this to the desired size
+        n = length(megax)  # Change this to the desired size
         matrix = zeros(Float64, n, n)
 
         for i = 1:n # Fill the upper triangle
@@ -56,10 +57,19 @@ function fxity_kabsh(megax)
                 matrix[i, j] = align_rmsd(megax[i], megax[j])
             end
         end
-        return sum(matrix) * 2 / (n * n) , matrix
+
+        matrix += matrix' #make a symmetric matrix
+
+        cl = hclust(matrix, linkage=:complete)
+        results = cutree(cl, h=1.0) 
+
+        aver_rmsd = sum(matrix) / (n * n)
+        nclusts = length(unique(results))
+        norm_nclusts = nclusts / n
+
+        return aver_rmsd, nclusts, norm_nclusts, n, matrix 
         
     catch 
         return 0
     end
 end
-

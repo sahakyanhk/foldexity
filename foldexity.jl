@@ -7,7 +7,7 @@ function fxpdb(pdbpath)
     pdb = readpdb(pdbpath)
     coordmatrix = pdb2matrix(pdb)
     megax = matrix2fragments(coordmatrix, 4)
-    nfrags = size(megax)[1]
+    nfrags = length(megax)
     fxity, m = fxity_kabsh(megax)
     return fxity, nfrags
 end
@@ -32,7 +32,7 @@ function fxdir(dirpath, outfile = "fxdata.tsv", fsize=12, printdata = false)
 
     # Thread-safe writing to the output file
     open(outfile, "w") do f 
-        write(f, "ndx\tpdbpath\tfxity\tnfrags\n" )
+        write(f, "ndx\tpdbpath\tfxity\tnclusts\taver_rmsd\tnres\n" )
     end
 
     #start loop with muptithreading
@@ -41,17 +41,17 @@ function fxdir(dirpath, outfile = "fxdata.tsv", fsize=12, printdata = false)
             pdb = readpdb(pdbpath)
             coordmatrix = pdb2matrix(pdb)
             megax = matrix2fragments(coordmatrix, fsize)
-            nres = size(megax)[1]
-            fxity, m = fxity_kabsh(megax)
-            data = "$i\t$pdbpath\t$fxity\t$nres\n"
+            nres = length(megax)
+            aver_rmsd, nclusts, fxity, nres, matrix = fxity_kabsh(megax)
+            data = "$i\t$pdbpath\t$fxity\t$nclusts\t$aver_rmsd\t$nres\n"
             push!(data_collector, data)
         catch 
-            push!(data_collector, "$i\t$pdbpath\t\t\n")
+            push!(data_collector, "$i\t$pdbpath\t\t\t\t\n")
 
             println("Warrning: no data for $pdbpath")
         end
         i+=1
-        if i % 100 == 0 
+        if i % 50 == 0 
 
             output = join(data_collector)
 
@@ -82,10 +82,10 @@ if abspath(PROGRAM_FILE) == @__FILE__
 
     inputpath = ARGS[1]
     outpath = ARGS[2]
-    #fsize = ARGS[3]
+    fsize = parse(Int64, ARGS[3])
 
     if isdir(inputpath)
-        data = fxdir(inputpath, outpath, 16)  
+        data = fxdir(inputpath, outpath, fsize)  
     elseif isfile(inputpath)
         fxity, nfrags = fxpdb(inputpath)  
         println("$inputpath        $fxity       $nfrags")  
