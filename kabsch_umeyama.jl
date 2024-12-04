@@ -47,7 +47,7 @@ end
 
 
 #calculate all-vs-all kabsch rmsd for fragments in the matrix
-function fxity_kabsh(megax)    
+function fxity_kabsh(megax, cutoff = 1.0)    
     try        
         n = length(megax)  # Change this to the desired size
         matrix = zeros(Float64, n, n)
@@ -61,7 +61,7 @@ function fxity_kabsh(megax)
         matrix += matrix' #make a symmetric matrix
 
         cl = hclust(matrix, linkage=:complete)
-        results = cutree(cl, h=1.0) 
+        results = cutree(cl, h=cutoff) 
 
         aver_rmsd = sum(matrix) / (n * n)
         nclusts = length(unique(results))

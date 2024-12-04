@@ -13,7 +13,7 @@ function fxpdb(pdbpath)
 end
 
 #calculate fxity for all pdb files in the directory
-function fxdir(dirpath, outfile = "fxdata.tsv", fsize=12, printdata = false)
+function fxdir(dirpath, outfile = "fxdata.tsv", fsize=12, cutoff = 1.0, printdata = false)
     
     pdbpaths = []
     for (root, _, files) in walkdir(dirpath)
@@ -32,17 +32,21 @@ function fxdir(dirpath, outfile = "fxdata.tsv", fsize=12, printdata = false)
 
     # Thread-safe writing to the output file
     open(outfile, "w") do f 
-        write(f, "ndx\tpdbpath\tfxity\tnclusts\taver_rmsd\tnres\n" )
+        write(f, "ndx\tpdbpath\tfxity\tnclusts\taver_rmsd\tnfrags\n" )
     end
 
     #start loop with muptithreading
     Threads.@threads for pdbpath in pdbpaths
         try     
             pdb = readpdb(pdbpath)
+            if missing_residues(pdb)
+                println("Warning: $pdbpath probably has missing residues, skipping")
+                continue
+            end
             coordmatrix = pdb2matrix(pdb)
             megax = matrix2fragments(coordmatrix, fsize)
             nres = length(megax)
-            aver_rmsd, nclusts, fxity, nres, matrix = fxity_kabsh(megax)
+            aver_rmsd, nclusts, fxity, nres, matrix = fxity_kabsh(megax, cutoff)
             data = "$i\t$pdbpath\t$fxity\t$nclusts\t$aver_rmsd\t$nres\n"
             push!(data_collector, data)
         catch 
@@ -85,7 +89,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
     fsize = parse(Int64, ARGS[3])
 
     if isdir(inputpath)
-        data = fxdir(inputpath, outpath, fsize)  
+        data = fxdir(inputpath, outpath, fsize, 1.0)  
     elseif isfile(inputpath)
         fxity, nfrags = fxpdb(inputpath)  
         println("$inputpath        $fxity       $nfrags")  

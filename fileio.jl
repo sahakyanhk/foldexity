@@ -111,6 +111,7 @@ function pdb2matrix(pdb)
     return hcat(pdb.x, pdb.y, pdb.z)    
 end
 
+
 function pdbmatrix2pdb(matrix)
     
     pdb = PDBdata(Int[], Int[], String[], String[], String[], Int32[], Float32[], Float32[], Float32[])
@@ -127,6 +128,12 @@ function pdbmatrix2pdb(matrix)
     
     return pdb
 end
+
+function missing_residues(pdb)
+    resid = unique(pdb.resid)
+    return !all((diff(resid) .== 1))  
+end
+
 
 #split matrix into fragments
 function matrix2fragments(matrix, wordsize=4) 
