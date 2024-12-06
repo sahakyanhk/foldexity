@@ -1,6 +1,8 @@
 using LinearAlgebra
 using Statistics
 using Clustering
+using Distances
+
 
 #kabsch-umeyama
 function translate_to_centroid(coord_matrix)
@@ -37,13 +39,19 @@ function align_rmsd(m1,m2)
     num_atoms = size(normalisedP)[1]
     rotated = zeros(Float64,num_atoms,3)
 
-    for i=1:num_atoms
-        rotated[i,:] = orot*normalisedP[i,:]
-    end
+    rotated  = (orot*normalisedP')'
 
     RMSD_value = norm(rotated-normalisedQ)
+
+    #TMscore
+    distances = colwise(euclidean, rotated', normalisedQ')
+    L0 = num_atoms
+    d0 = 1.24 * cbrt(L0 - 15) - 1.8
+    tmscore = (1/L0) * sum([1 / (1 + ((d/d0) ^2)) for d in distances])
+    
     return RMSD_value
 end
+
 
 
 #calculate all-vs-all kabsch rmsd for fragments in the matrix

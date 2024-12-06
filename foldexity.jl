@@ -1,5 +1,6 @@
 include("fileio.jl")
 include("kabsch_umeyama.jl")
+using ProgressBars
 
 #calculate fxity for a pdb file
 function fxpdb(pdbpath)
@@ -36,7 +37,7 @@ function fxdir(dirpath, outfile = "fxdata.tsv", fsize=12, cutoff = 1.0, printdat
     end
 
     #start loop with muptithreading
-    Threads.@threads for pdbpath in pdbpaths
+    Threads.@threads for pdbpath in ProgressBar(pdbpaths)
         try     
             pdb = readpdb(pdbpath)
             if missing_residues(pdb)
@@ -87,9 +88,11 @@ if abspath(PROGRAM_FILE) == @__FILE__
     inputpath = ARGS[1]
     outpath = ARGS[2]
     fsize = parse(Int64, ARGS[3])
+    cutoff = parse(Float64, ARGS[4])
+
 
     if isdir(inputpath)
-        data = fxdir(inputpath, outpath, fsize, 1.0)  
+        data = fxdir(inputpath, outpath, fsize, cutoff)  
     elseif isfile(inputpath)
         fxity, nfrags = fxpdb(inputpath)  
         println("$inputpath        $fxity       $nfrags")  
