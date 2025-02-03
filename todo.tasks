@@ -1,14 +1,15 @@
 ToDo:
+    ✔ TM-score @done (12/8/2024, 9:09:23 AM)
+    ☐ clustering based on tmsocre cutoff instead of rmsd
     ☐ fxity and 3Di entropy corellation
     ☐ Clustering algorithm
-        ☐ UPGMA tree with cutoff
-        ☐ counts with rmsd cutoff
-        ☐ linclust
+        ✔ UPGMA tree with cutoff @done (12/8/2024, 9:08:28 AM)
+        ✔ counts with rmsd cutoff @done (12/8/2024, 9:08:26 AM)
+        ☐ clustering withot all-vs-all?
     ☐ Plots and analyses
-        ☐ fxity distribution
+        ✔ fxity distribution @done (12/8/2024, 9:09:06 AM)
         ☐ backbone visualizaiton in plotly
-    ☐ TM-score
-    ☐ make a subset of scop40 for fast testing (cluster with foldseek)
+    ✔ make a subset of scop40 for fast testing (cluster with foldseek) @done (12/8/2024, 9:09:13 AM)
     Done:
         ✔ Import functions @done (11/27/2024, 11:28:19 PM)
             ✔ to jupyter @done (11/27/2024, 10:20:22 PM)
