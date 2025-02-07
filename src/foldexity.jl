@@ -6,11 +6,14 @@ using ProgressBars
 function fxpdb(pdbpath)
     println("Starting foldexity ...")
     pdb = readpdb(pdbpath)
+    if missing_residues(pdb)
+        println("Warning: $pdbpath probably has missing residues, check the file")
+    end
     coordmatrix = pdb2matrix(pdb)
     megax = matrix2fragments(coordmatrix, 4)
     nfrags = length(megax)
-    fxity, m = fxity_kabsh(megax)
-    return fxity, nfrags
+    fxity, aver_rmsd, nclusts, norm_nclusts, n, matrix = fxity_kabsh(megax)
+    return fxity, aver_rmsd, nclusts, norm_nclusts, n, matrix
 end
 
 #calculate fxity for all pdb files in the directory
@@ -33,7 +36,7 @@ function fxdir(dirpath, outfile = "fxdata.tsv", fsize=12, cutoff = 1.0, printdat
 
     # Thread-safe writing to the output file
     open(outfile, "w") do f 
-        write(f, "ndx\tpdbpath\tfxity\tnclusts\taver_rmsd\tnfrags\n" )
+        write(f, "ndx\tpdbpath\tfxity\taver_rmsd\tnclusts\tnorm_nclusts\tnres\n")
     end
 
     #start loop with muptithreading
@@ -47,8 +50,8 @@ function fxdir(dirpath, outfile = "fxdata.tsv", fsize=12, cutoff = 1.0, printdat
             coordmatrix = pdb2matrix(pdb)
             megax = matrix2fragments(coordmatrix, fsize)
             nres = length(megax)
-            aver_rmsd, nclusts, fxity, nres, matrix = fxity_kabsh(megax, cutoff)
-            data = "$i\t$pdbpath\t$fxity\t$nclusts\t$aver_rmsd\t$nres\n"
+            fxity, aver_rmsd, nclusts, norm_nclusts, n, matrix  = fxity_kabsh(megax, cutoff)
+            data = "$i\t$pdbpath\t$fxity\t$aver_rmsd\t$nclusts\t$norm_nclusts\t$nres\n"
             push!(data_collector, data)
         catch 
             push!(data_collector, "$i\t$pdbpath\t\t\t\t\n")
@@ -95,7 +98,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
         data = fxdir(inputpath, outpath, fsize, cutoff)  
     elseif isfile(inputpath)
         fxity, nfrags = fxpdb(inputpath)  
-        println("$inputpath        $fxity       $nfrags")  
+        println("$inputpath\t$fxity\t$nfrags")  
     else
         println("Error: The path '$inputpath' is neither a directory nor a file.")
     end

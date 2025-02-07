@@ -2,28 +2,39 @@
 using DataFrames
 using CSV
 
-function structure2fs3di(input, output)
+function structure2fs3di(input::String, output::String = "tmp", keep_3di::Bool=false)
+    #redirect_stdout(devnull)
     run(`bin/foldseek structureto3didescriptor $input $output`)
     df = CSV.read(output, DataFrame, delim="\t", header=["id","seqaa", "seq3di", "coords"])
+    if !keep_3di
+        rm.([output, "$output.dbtype"], force=true)
+    end
+
     return df
 end
 
 
-#https://discourse.julialang.org/t/how-to-count-all-unique-character-frequency-in-a-string/19342/3
-function countchars(s)  
-    res = Dict{Char, Int}()
-    for c in s
-        res[c] = get(res, c, 0) + 1
+
+function shannon(seq, k=1)
+
+    if k > 1
+        seq = [seq[i:i+k] for i in 1:length(seq)-k]
     end
-    return res
+
+    counts = Dict{Any, Int}()
+    for aa in seq
+        counts[aa] = get(counts, aa, 0) + 1
+    end
+
+    seqlen = length(seq)
+#    seqlen = 20^k
+    
+    probabilities = [count / seqlen for count in values(counts)]    
+    entropy = -sum([p * log2(p) for p in probabilities])
+
+    return  entropy
 end
 
-# https://www.reddit.com/r/learnpython/comments/g1sdkh/python_programming_challenge_calculating_shannon/
-
-function shannon(seq)
-    frequencies = collect(values(countchars(seq)))/length(seq)
-    return -sum([f * log2(f) for f in frequencies])
-end
 
 
 if abspath(PROGRAM_FILE) == @__FILE__
