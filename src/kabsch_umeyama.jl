@@ -3,6 +3,8 @@ using Statistics
 using Clustering
 using Distances
 
+include("entropy.jl")
+
 
 #kabsch-umeyama
 function translate_to_centroid(coord_matrix)
@@ -57,28 +59,29 @@ end
 #calculate all-vs-all kabsch rmsd for fragments in the matrix
 function fxity_kabsh(coordmatrix, cutoff = 1.0)    
     try        
-        n = length(coordmatrix)  # Change this to the desired size
-        matrix = zeros(Float64, n, n)
+        nfrags = length(coordmatrix)  # Change this to the desired size
+        matrix = zeros(Float64, nfrags, nfrags)
 
-        for i = 1:n # Fill the upper triangle
-            for j = i+1:n  # Ensure j >= i for the upper triangle
+        for i = 1:nfrags # Fill the upper triangle
+            for j = i+1:nfrags  # Ensure j >= i for the upper triangle
                 matrix[i, j] = align_rmsd(coordmatrix[i], coordmatrix[j])
             end
         end
 
         matrix += matrix' #make a symmetric matrix
-        aver_rmsd = sum(matrix) / (n * n)
+        aver_rmsd = sum(matrix) / (nfrags * nfrags)
 
         cl = hclust(matrix, linkage=:complete)
         results = cutree(cl, h=cutoff) 
         nclusts = length(unique(results))
-        norm_nclusts = nclusts / n
+        norm_nclusts = nclusts / nfrags
 
         fxity = shannon(results, 1)
 
-        return fxity, aver_rmsd, nclusts, norm_nclusts, n, matrix 
+        return fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix 
         
-    catch 
+    catch err
+        print(err)
         return 0
     end
 end

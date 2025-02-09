@@ -31,8 +31,8 @@ function shannon(seq, k=1)
     
     probabilities = [count / seqlen for count in values(counts)]    
     entropy = -sum([p * log2(p) for p in probabilities])
-
-    return  entropy
+    norm_entropy = entropy / length(counts)
+    return  entropy #, norm_entropy
 end
 
 
