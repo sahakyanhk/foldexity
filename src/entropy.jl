@@ -4,7 +4,7 @@ using CSV
 
 function structure2fs3di(input::String, output::String = "tmp", keep_3di::Bool=false)
     #redirect_stdout(devnull)
-    run(`bin/foldseek structureto3didescriptor $input $output`)
+    run(`bin/foldseek structureto3didescriptor -v 0 $input $output`)
     df = CSV.read(output, DataFrame, delim="\t", header=["id","seqaa", "seq3di", "coords"])
     if !keep_3di
         rm.([output, "$output.dbtype"], force=true)
@@ -32,9 +32,8 @@ function shannon(seq, k=1)
     probabilities = [count / seqlen for count in values(counts)]    
     entropy = -sum([p * log2(p) for p in probabilities])
     norm_entropy = entropy / length(counts)
-    return  entropy #, norm_entropy
+    return  entropy, norm_entropy
 end
-
 
 
 if abspath(PROGRAM_FILE) == @__FILE__

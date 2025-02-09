@@ -76,9 +76,9 @@ function fxity_kabsh(coordmatrix, cutoff = 1.0)
         nclusts = length(unique(results))
         norm_nclusts = nclusts / nfrags
 
-        fxity = shannon(results, 1)
+        fxity, norm_fxity = shannon(results, 1)
 
-        return fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix 
+        return fxity, norm_fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix 
         
     catch err
         print(err)

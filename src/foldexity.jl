@@ -38,7 +38,7 @@ function fxdir(dirpath, outfile = "fxdata.tsv", ksize=4, cutoff = 1.0, printdata
 
     # Thread-safe writing to the output file
     open(outfile, "w") do f 
-        write(f, "ndx\tpdbpath\tfxity\taver_rmsd\tnclusts\tnorm_nclusts\tnres\n")
+        write(f, "ndx\tpdbpath\tfxity\tnorm_fxity\taver_rmsd\tnclusts\tnorm_nclusts\tnfrags\n")
     end
 
     #start loop with muptithreading
@@ -51,11 +51,11 @@ function fxdir(dirpath, outfile = "fxdata.tsv", ksize=4, cutoff = 1.0, printdata
             end
             coordmatrix = pdb2matrix(pdb)
             megax = matrix2fragments(coordmatrix, ksize)
-            fxity, aver_rmsd, nclusts, norm_nclusts, nfrag, matrix  = fxity_kabsh(megax, cutoff)
-            data = "$i\t$pdbpath\t$fxity\t$aver_rmsd\t$nclusts\t$norm_nclusts\t$nfrag\n"
+            fxity, norm_fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix  = fxity_kabsh(megax, cutoff)
+            data = "$i\t$pdbpath\t$fxity\t$norm_fxity\t$aver_rmsd\t$nclusts\t$norm_nclusts\t$nfrags\n"
             push!(data_collector, data)
         catch 
-            push!(data_collector, "$i\t$pdbpath\t\t\t\t\t\n")
+            push!(data_collector, "$i\t$pdbpath\t\t\t\t\t\t\n")
             println("Warrning: no data for $pdbpath")
         end
         i+=1
@@ -124,8 +124,8 @@ if abspath(PROGRAM_FILE) == @__FILE__
         if isdir(inputpath)
             fxdir(inputpath, outpath, ksize, cutoff)  
         elseif isfile(inputpath)
-            fxity, aver_rmsd, nclusts, norm_nclusts, nfrag, matrix = fxpdb(inputpath, ksize, cutoff)  
-            println("$fxity\t$aver_rmsd\t$nclusts\t$norm_nclusts\t$nfrag")  
+            fxity, norm_fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix = fxpdb(inputpath, ksize, cutoff)  
+            println("$fxity\n$orm_fxity\t$aver_rmsd\t$nclusts\t$norm_nclusts\t$nfrags")  
         else
             println("Error: The path '$inputpath' is neither a directory nor a file.")
         end
