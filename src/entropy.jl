@@ -13,6 +13,16 @@ function structure2fs3di(input::String, output::String = "tmp", keep_3di::Bool=f
     return df
 end
 
+function structure2rsmu(input::String, output::String = "tmp", keep_mu::Bool=false)
+    #redirect_stdout(devnull)
+    run(`bin/reseek -convert2mu $input -fasta $output  `)
+    df = CSV.read($output.mu, DataFrame, delim="\t", header=[```not finished```])
+    if !keep_mu
+        rm.([output, "$output.dbtype"], force=true)
+    end
+
+    return df
+end
 
 
 function shannon(seq, k=1)
