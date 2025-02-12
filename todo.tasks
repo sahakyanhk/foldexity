@@ -1,4 +1,6 @@
 ToDo:
+    ☐ average kmer entropy over a sequence
+    ☐ foldexity using distant contacts
     ☐ alphabet 2mer entropy 
     ☐ residue/2mer correlation between AA/3di/Mu alphabets
     ☐ Clustering algorithm

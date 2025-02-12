@@ -2,6 +2,32 @@
 using DataFrames
 using CSV
 
+function readfasta(input::String)
+    df = DataFrame([[],[]], ["id", "seq"])
+
+    id = ""
+    sequence = ""
+
+    for line in eachline(open(input))
+        if startswith(line, ">") # is header
+
+            if !isempty(sequence)
+                push!(df, [id, sequence])
+                sequence=""
+            end
+
+            id = string(split(line, ">")[2])
+
+        else    # header
+            sequence  = sequence * line           
+        end
+        
+    end
+    push!(df, [id, sequence])
+    return df
+end
+
+
 function structure2fs3di(input::String, output::String = "tmp", keep_3di::Bool=false)
     #redirect_stdout(devnull)
     run(`bin/foldseek structureto3didescriptor -v 0 $input $output`)
@@ -16,11 +42,11 @@ end
 function structure2rsmu(input::String, output::String = "tmp", keep_mu::Bool=false)
     #redirect_stdout(devnull)
     run(`bin/reseek -convert2mu $input -fasta $output  `)
-    df = CSV.read($output.mu, DataFrame, delim="\t", header=[```not finished```])
+    df = readfasta(output)
     if !keep_mu
         rm.([output, "$output.dbtype"], force=true)
     end
-
+    
     return df
 end
 
