@@ -30,7 +30,7 @@ end
 
 function structure2fs3di(input::String, output::String = "tmp", keep_3di::Bool=false)
     #redirect_stdout(devnull)
-    run(`bin/foldseek structureto3didescriptor -v 0 $input $output`)
+    run(`../bin/foldseek structureto3didescriptor -v 0 $input $output`)
     df = CSV.read(output, DataFrame, delim="\t", header=["id","seqaa", "seq3di", "coords"])
     if !keep_3di
         rm.([output, "$output.dbtype"], force=true)
@@ -42,7 +42,7 @@ end
 
 function structure2rsmu(input::String, output::String = "tmp", keep_mu::Bool=false)
     #redirect_stdout(devnull)
-    run(`bin/reseek -convert2mu $input -fasta $output  `)
+    run(`../bin/reseek -convert2mu $input -fasta $output  `)
     df = readfasta(output)
     if !keep_mu
         rm.([output, "$output.dbtype"], force=true)
@@ -80,7 +80,7 @@ function entropy_profile(seq, k=12)
         k_mers = split2kmers(seq, k)
     end
 
-    return shannon.([kmer for kmer in k_mers])
+    return entropy_shannon.([kmer for kmer in k_mers])
 
 end
 
