@@ -39,6 +39,7 @@ function structure2fs3di(input::String, output::String = "tmp", keep_3di::Bool=f
     return df
 end
 
+
 function structure2rsmu(input::String, output::String = "tmp", keep_mu::Bool=false)
     #redirect_stdout(devnull)
     run(`bin/reseek -convert2mu $input -fasta $output  `)
@@ -46,30 +47,45 @@ function structure2rsmu(input::String, output::String = "tmp", keep_mu::Bool=fal
     if !keep_mu
         rm.([output, "$output.dbtype"], force=true)
     end
-    
+
     return df
 end
 
+function split2kmers(seq, k)
+    return [seq[i:i+k-1] for i in 1:length(seq)-k]
+end
 
-function shannon(seq, k=1)
+function entropy_shannon(kmers, k=1)
 
     if k > 1
-        seq = [seq[i:i+k] for i in 1:length(seq)-k]
+        kmers = split2kmers(kmers, k)
     end
+
+    seqlen = length(kmers)
 
     counts = Dict{Any, Int}()
-    for aa in seq
-        counts[aa] = get(counts, aa, 0) + 1
+    for kmer in kmers
+        counts[kmer] = get(counts, kmer, 0) + 1
     end
-
-    seqlen = length(seq)
-#    seqlen = 20^k
     
     probabilities = [count / seqlen for count in values(counts)]    
     entropy = -sum([p * log2(p) for p in probabilities])
-    norm_entropy = entropy / length(counts)
-    return  entropy, norm_entropy
+    #norm_entropy = entropy / length(counts)
+    return  entropy #, norm_entropy
 end
+
+function entropy_profile(seq, k=12)
+
+    if k > 1
+        k_mers = split2kmers(seq, k)
+    end
+
+    return shannon.([kmer for kmer in k_mers])
+
+end
+
+
+
 
 
 if abspath(PROGRAM_FILE) == @__FILE__
