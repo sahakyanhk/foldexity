@@ -1,12 +1,13 @@
 ToDo:
-    ☐ average kmer entropy over a sequence
     ☐ foldexity using distant contacts
-    ☐ alphabet 2mer entropy 
-    ☐ residue/2mer correlation between AA/3di/Mu alphabets
+    ☐ relative entropy of an alphabet 2-mers in aa, mu & 3di; from RE r_ij = log(p_i) + log(p_j) - log(p_ij);  R = (1/N) sum_ij |r_ij|
     ☐ Clustering algorithm
-    ☐ clustering withot all-vs-all?
+    ☐ clustering withot cutoff and UPGMA
     ☐ clustered backbone visualizaiton in plotly
     Done:
+        ✔ pdb2dssp @done (2/13/2025, 9:46:07 PM)
+        ✔ residue correlation between AA/3di/Mu alphabets @done (2/13/2025, 1:04:25 PM)
+        ✔ average kmer entropy over a sequence @done (2/13/2025, 1:03:59 PM)
         ✔ fxity distribution @done (12/8/2024, 9:09:06 AM)
         ✔ normalized Shannon entropy @done (2/12/2025, 8:41:59 AM)
         ✘ normalized by Z-score and sequence sequence length @cancelled (2/12/2025, 8:42:30 AM)

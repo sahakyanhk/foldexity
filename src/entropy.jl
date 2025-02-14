@@ -30,7 +30,7 @@ end
 
 function structure2fs3di(input::String, output::String = "tmp", keep_3di::Bool=false)
     #redirect_stdout(devnull)
-    run(`../bin/foldseek structureto3didescriptor -v 0 $input $output`)
+    run(`bin/foldseek structureto3didescriptor -v 0 $input $output`)
     df = CSV.read(output, DataFrame, delim="\t", header=["id","seqaa", "seq3di", "coords"])
     if !keep_3di
         rm.([output, "$output.dbtype"], force=true)
@@ -42,7 +42,7 @@ end
 
 function structure2rsmu(input::String, output::String = "tmp", keep_mu::Bool=false)
     #redirect_stdout(devnull)
-    run(`../bin/reseek -convert2mu $input -fasta $output  `)
+    run(`bin/reseek -convert2mu $input -fasta $output`)
     df = readfasta(output)
     if !keep_mu
         rm.([output, "$output.dbtype"], force=true)
@@ -50,6 +50,31 @@ function structure2rsmu(input::String, output::String = "tmp", keep_mu::Bool=fal
 
     return df
 end
+
+
+
+function structure2dssp(input::String, output::String = "tmp", keep_mu::Bool=false)
+    
+    path = input
+    df = DataFrame([[],[]], ["id", "ss"])
+
+    for pdb in readdir(path)
+        pdbname = string(split(pdb, ".")[1])
+        try
+            dssp_cmd = pipeline(`bin/dssp $path/$pdb`, `sed -n '/#/,$p'`, `awk '{print substr($0, 17,1)}'`, `tr ' ' 'C'`, `tr -d '\n'`)
+            ss = read(dssp_cmd, String)
+            if true #check if valid string
+                push!(df, [pdbname, ss])
+            end
+        catch 
+            println("warrning")
+        end    
+    end
+
+    return df
+end
+
+
 
 function split2kmers(seq, k)
     return [seq[i:i+k-1] for i in 1:length(seq)-k]
@@ -83,9 +108,6 @@ function entropy_profile(seq, k=12)
     return entropy_shannon.([kmer for kmer in k_mers])
 
 end
-
-
-
 
 
 if abspath(PROGRAM_FILE) == @__FILE__
