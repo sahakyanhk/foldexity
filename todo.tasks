@@ -1,5 +1,6 @@
 ToDo:
     ☐ foldexity using distant contacts
+    ☐ kabasch single function
     ☐ relative entropy of an alphabet 2-mers in aa, mu & 3di; from RE r_ij = log(p_i) + log(p_j) - log(p_ij);  R = (1/N) sum_ij |r_ij|
     ☐ Clustering algorithm
     ☐ clustering withot cutoff and UPGMA
@@ -8,9 +9,7 @@ ToDo:
         ✔ pdb2dssp @done (2/13/2025, 9:46:07 PM)
         ✔ residue correlation between AA/3di/Mu alphabets @done (2/13/2025, 1:04:25 PM)
         ✔ average kmer entropy over a sequence @done (2/13/2025, 1:03:59 PM)
-        ✔ fxity distribution @done (12/8/2024, 9:09:06 AM)
         ✔ normalized Shannon entropy @done (2/12/2025, 8:41:59 AM)
-        ✘ normalized by Z-score and sequence sequence length @cancelled (2/12/2025, 8:42:30 AM)
         ✔ make a subset of scop40 for fast testing (cluster with foldseek) @done (12/8/2024, 9:09:13 AM)
         ✔ counts with rmsd cutoff @done (2/12/2025, 8:42:20 AM)
         ✔ UPGMA tree with cutoff @done (2/9/2025, 8:06:34 AM)

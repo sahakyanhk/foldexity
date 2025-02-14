@@ -6,6 +6,22 @@ using Distances
 include("entropy.jl")
 
 
+function distancematrix(xyzcoords, min_seq_dist = 0)
+
+    matirx_lengnt = size(xyzcoords, 1)
+ 
+    distmatrix = pairwise(Euclidean(), xyzcoords, dims=1)
+    
+    if min_seq_dist > 0
+       for i in 1:matirx_lengnt-min_seq_dist
+        distmatrix[i:i+min_seq_dist, i:i+min_seq_dist,] .= 1e9
+       end
+    end
+
+    return distmatrix
+end
+
+
 #kabsch-umeyama
 function translate_to_centroid(coord_matrix)
     # Normalises the molecular coordinates by centering them.
@@ -15,13 +31,11 @@ function translate_to_centroid(coord_matrix)
     return translated_geom
 end
 
-
 function cross_covariance_matrix(Pmatrix,Qmatrix)
     # Cross covariance matrix gives measure of variability between two matrices
     CCmatrix = transpose(Pmatrix) * Qmatrix
     return CCmatrix
 end
-
 
 function optimal_rotation_matrix(CCmatrix)
     # Returns 3x3 matrix that can be applied to P to get Q
@@ -55,16 +69,15 @@ function align_rmsd(m1,m2)
 end
 
 
-
 #calculate all-vs-all kabsch rmsd for fragments in the matrix
-function fxity_kabsh(coordmatrix, cutoff = 1.0)    
+function fxity_kabsh(xyzcoords, cutoff = 1.0)    
     try        
-        nfrags = length(coordmatrix)  # Change this to the desired size
+        nfrags = length(xyzcoords)  # Change this to the desired size
         matrix = zeros(Float64, nfrags, nfrags)
 
         for i = 1:nfrags # Fill the upper triangle
             for j = i+1:nfrags  # Ensure j >= i for the upper triangle
-                matrix[i, j] = align_rmsd(coordmatrix[i], coordmatrix[j])
+                matrix[i, j] = align_rmsd(xyzcoords[i], xyzcoords[j])
             end
         end
 
@@ -76,12 +89,13 @@ function fxity_kabsh(coordmatrix, cutoff = 1.0)
         nclusts = length(unique(results))
         norm_nclusts = nclusts / nfrags
 
-        fxity, norm_fxity = shannon(results, 1)
+        fxity = entropy_shannon(results, 1)
 
-        return fxity, norm_fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix 
+        return fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix 
         
     catch err
         print(err)
         return 0
     end
 end
+

@@ -13,7 +13,7 @@ mutable struct PDBdata
     z::Vector{Float32}
 end
 
-function readpdb(pdb_file::String)
+function readpdb_backbone(pdb_file::String)
 
     pdb = PDBdata(Int[], Int[], String[], String[], String[], Int32[], Float32[], Float32[], Float32[] )
     i = 1
@@ -38,6 +38,33 @@ function readpdb(pdb_file::String)
     end
     return pdb
 end
+
+function readpdb_calpha(pdb_file::String)
+
+    pdb = PDBdata(Int[], Int[], String[], String[], String[], Int32[], Float32[], Float32[], Float32[] )
+    i = 1
+    for line in eachline(open(pdb_file))
+        if startswith(line, "ATOM") 
+            if strip(line[13:16]) == "CA" 
+                push!(pdb.ndx, i) #count from 1 to ...
+                push!(pdb.index, parse(Int,strip(line[7:11]))) #index in original pdb
+                push!(pdb.atomname, strip(line[13:16]))
+                push!(pdb.resname, strip(line[17:21]))
+                push!(pdb.chain, strip(line[22:22]))
+                push!(pdb.resid, parse(Int,strip(line[23:26])))
+                push!(pdb.x, parse(Float32, strip(line[31:38])))
+                push!(pdb.y, parse(Float32, strip(line[39:46])))
+                push!(pdb.z, parse(Float32, strip(line[47:54])))
+                i+=1
+            end
+        end
+        if startswith(line, "ENDMDL")
+            break
+        end
+    end
+    return pdb
+end
+
 
 
 #write a pdb file
@@ -107,7 +134,7 @@ function pdb2pdbmatrix(pdb)
     return pdbmatrix
 end
 
-function pdb2matrix(pdb)
+function pdb2xyz(pdb)
     return hcat(pdb.x, pdb.y, pdb.z)    
 end
 
@@ -143,6 +170,12 @@ function matrix2fragments(matrix, wordsize=4)
     msize = size(matrix)[1]
     
     fragmentsmatrix = [matrix[i:i-1+wsize,:] for i=1:3:msize-wsize+1]
+
+    return fragmentsmatrix
+end
+
+#split matrix into fragments
+function matrix2distancefragments(matrix, wordsize=4) 
 
     return fragmentsmatrix
 end

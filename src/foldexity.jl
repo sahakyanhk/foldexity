@@ -7,12 +7,12 @@ include("kabsch_umeyama.jl")
 #calculate fxity for a pdb file
 function fxpdb(pdbpath, wsize = 4, cutoff = 1.0)
     println("Starting foldexity...")
-    pdb = readpdb(pdbpath)
+    pdb = readpdb_backbone(pdbpath)
     if missing_residues(pdb)
         println("Warning: $pdbpath probably has missing residues, check the file")
     end
-    coordmatrix = pdb2matrix(pdb)
-    megax = matrix2fragments(coordmatrix, wsize)
+    xyzcoords = pdb2xyz(pdb)
+    megax = matrix2fragments(xyzcoords, wsize)
     
     fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix = fxity_kabsh(megax, cutoff)
     return fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix
@@ -38,27 +38,29 @@ function fxdir(dirpath, outfile = "fxdata.tsv", ksize=4, cutoff = 1.0, printdata
 
     # Thread-safe writing to the output file
     open(outfile, "w") do f 
-        write(f, "ndx\tpdbpath\tfxity\tnorm_fxity\taver_rmsd\tnclusts\tnorm_nclusts\tnfrags\n")
+        write(f, "ndx\tpdbpath\tfxity\taver_rmsd\tnclusts\tnorm_nclusts\tnfrags\n")
     end
 
     #start loop with muptithreading
     Threads.@threads for pdbpath in ProgressBar(pdbpaths)
         try     
-            pdb = readpdb(pdbpath)
+            pdb = readpdb_backbone(pdbpath)
             if missing_residues(pdb)
                 println("Warning: $pdbpath probably has missing residues, skipping")
                 continue
             end
-            coordmatrix = pdb2matrix(pdb)
-            megax = matrix2fragments(coordmatrix, ksize)
-            fxity, norm_fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix  = fxity_kabsh(megax, cutoff)
-            data = "$i\t$pdbpath\t$fxity\t$norm_fxity\t$aver_rmsd\t$nclusts\t$norm_nclusts\t$nfrags\n"
+            xyzcoords = pdb2xyz(pdb)
+            megax = matrix2fragments(xyzcoords, ksize)
+            fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix  = fxity_kabsh(megax, cutoff)
+            data = "$i\t$pdbpath\t$fxity\t$aver_rmsd\t$nclusts\t$norm_nclusts\t$nfrags\n"
             push!(data_collector, data)
         catch 
             push!(data_collector, "$i\t$pdbpath\t\t\t\t\t\t\n")
             println("Warrning: no data for $pdbpath")
         end
+
         i+=1
+        
         if i % 50 == 0 
 
             output = join(data_collector)
@@ -124,8 +126,8 @@ if abspath(PROGRAM_FILE) == @__FILE__
         if isdir(inputpath)
             fxdir(inputpath, outpath, ksize, cutoff)  
         elseif isfile(inputpath)
-            fxity, norm_fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix = fxpdb(inputpath, ksize, cutoff)  
-            println("$fxity\n$orm_fxity\t$aver_rmsd\t$nclusts\t$norm_nclusts\t$nfrags")  
+            fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, all_vs_all_matrix = fxpdb(inputpath, ksize, cutoff)  
+            println("$fxity\t$aver_rmsd\t$nclusts\t$norm_nclusts\t$nfrags")  
         else
             println("Error: The path '$inputpath' is neither a directory nor a file.")
         end
