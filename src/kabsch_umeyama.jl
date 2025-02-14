@@ -22,29 +22,28 @@ function distancematrix(xyzcoords, min_seq_dist = 0)
 end
 
 
-#kabsch-umeyama
-function translate_to_centroid(coord_matrix)
-    # Normalises the molecular coordinates by centering them.
-    center = [mean(coord_matrix[:,1]);mean(coord_matrix[:,2]);mean(coord_matrix[:,3])]
-    centroid = transpose(center)
-    translated_geom = broadcast(-,coord_matrix,centroid)
-    return translated_geom
-end
+#alighn and report rmsd or TMscore
+function kabsch_umeyama(m1,m2)
 
-function cross_covariance_matrix(Pmatrix,Qmatrix)
-    # Cross covariance matrix gives measure of variability between two matrices
-    CCmatrix = transpose(Pmatrix) * Qmatrix
-    return CCmatrix
-end
-
-function optimal_rotation_matrix(CCmatrix)
-    # Returns 3x3 matrix that can be applied to P to get Q
-    ORmatrix = sqrt(transpose(CCmatrix)*CCmatrix)*inv(CCmatrix)
-    return ORmatrix
-end
-
-
-function align_rmsd(m1,m2)
+    function translate_to_centroid(coord_matrix)
+        # Normalises the molecular coordinates by centering them.
+        center = [mean(coord_matrix[:,1]);mean(coord_matrix[:,2]);mean(coord_matrix[:,3])]
+        centroid = transpose(center)
+        translated_geom = broadcast(-,coord_matrix,centroid)
+        return translated_geom
+    end
+    
+    function cross_covariance_matrix(Pmatrix,Qmatrix)
+        # Cross covariance matrix gives measure of variability between two matrices
+        CCmatrix = transpose(Pmatrix) * Qmatrix
+        return CCmatrix
+    end
+    
+    function optimal_rotation_matrix(CCmatrix)
+        # Returns 3x3 matrix that can be applied to P to get Q
+        ORmatrix = sqrt(transpose(CCmatrix)*CCmatrix)*inv(CCmatrix)
+        return ORmatrix
+    end    
 
     normalisedP = translate_to_centroid(m1)
     normalisedQ = translate_to_centroid(m2)
@@ -77,7 +76,7 @@ function fxity_kabsh(xyzcoords, cutoff = 1.0)
 
         for i = 1:nfrags # Fill the upper triangle
             for j = i+1:nfrags  # Ensure j >= i for the upper triangle
-                matrix[i, j] = align_rmsd(xyzcoords[i], xyzcoords[j])
+                matrix[i, j] = kabsch_umeyama(xyzcoords[i], xyzcoords[j])
             end
         end
 
