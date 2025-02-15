@@ -5,14 +5,16 @@ include("fxio.jl")
 include("kabsch_umeyama.jl")
 
 #calculate fxity for a pdb file
-function fxpdb(pdbpath, wsize = 4, cutoff = 1.0)
+function fxpdb(pdbpath::String, ksize::Int = 4, cutoff::Float32 = 1.0)
     println("Starting foldexity...")
     pdb = readpdb_backbone(pdbpath)
     if missing_residues(pdb)
         println("Warning: $pdbpath probably has missing residues, check the file")
     end
     xyzcoords = pdb2xyz(pdb)
-    megax = coords2fragments(xyzcoords, wsize)
+    
+    megax = coords2knnfragments(xyzcoords, ksize)
+    #megax = coords2fragments(xyzcoords, wsize)
     
     fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix = fxity_kabsh(megax, cutoff)
     return fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix
@@ -50,12 +52,13 @@ function fxdir(dirpath, outfile = "fxdata.tsv", ksize=4, cutoff = 1.0, printdata
                 continue
             end
             xyzcoords = pdb2xyz(pdb)
-            megax = coords2fragments(xyzcoords, ksize)
+            megax = coords2knnfragments(xyzcoords, ksize)
+#            megax = coords2fragments(xyzcoords, ksize)
             fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix  = fxity_kabsh(megax, cutoff)
             data = "$i\t$pdbpath\t$fxity\t$aver_rmsd\t$nclusts\t$norm_nclusts\t$nfrags\n"
             push!(data_collector, data)
         catch 
-            push!(data_collector, "$i\t$pdbpath\t\t\t\t\t\t\n")
+            push!(data_collector, "$i\t$pdbpath\t\t\t\t\t\n")
             println("Warrning: no data for $pdbpath")
         end
 

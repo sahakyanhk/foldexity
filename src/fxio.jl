@@ -203,7 +203,7 @@ function matrix_knn(D::Matrix, k::Int=1)::Matrix
 end
 
 
-function matrix2knnfragments(xyzcoords::Matrix, wordsize::Int=6, min_seq_dist::Int=0)::Vector{Matrix}
+function coords2knnfragments(xyzcoords::Matrix, wordsize::Int=6, min_seq_dist::Int=0)::Vector{Matrix}
     # returns coordinates corresponding to knn indexes
     nxyz = size(xyzcoords, 1)
     distmatrix = distancematrix(xyzcoords, min_seq_dist)
