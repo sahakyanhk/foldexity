@@ -1,7 +1,7 @@
 using ArgParse
 using ProgressBars
 
-include("fileio.jl")
+include("fxio.jl")
 include("kabsch_umeyama.jl")
 
 #calculate fxity for a pdb file
@@ -12,7 +12,7 @@ function fxpdb(pdbpath, wsize = 4, cutoff = 1.0)
         println("Warning: $pdbpath probably has missing residues, check the file")
     end
     xyzcoords = pdb2xyz(pdb)
-    megax = matrix2fragments(xyzcoords, wsize)
+    megax = coords2fragments(xyzcoords, wsize)
     
     fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix = fxity_kabsh(megax, cutoff)
     return fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix
@@ -50,7 +50,7 @@ function fxdir(dirpath, outfile = "fxdata.tsv", ksize=4, cutoff = 1.0, printdata
                 continue
             end
             xyzcoords = pdb2xyz(pdb)
-            megax = matrix2fragments(xyzcoords, ksize)
+            megax = coords2fragments(xyzcoords, ksize)
             fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix  = fxity_kabsh(megax, cutoff)
             data = "$i\t$pdbpath\t$fxity\t$aver_rmsd\t$nclusts\t$norm_nclusts\t$nfrags\n"
             push!(data_collector, data)

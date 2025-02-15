@@ -1,4 +1,5 @@
 using Printf
+using Distances
 
 #readpdb from file
 mutable struct PDBdata
@@ -68,7 +69,7 @@ end
 
 
 #write a pdb file
-function writepdb(pdb, pdbpath="backbone.pdb")
+function writepdb(pdb, pdbpath="output.pdb")
 
     function align_name(name)
         name = strip(name)
@@ -161,10 +162,16 @@ function missing_residues(pdb)
     return !all((diff(resid) .== 1))  
 end
 
+######=====pdb2matrix2pdb====######
 
-#split matrix into fragments
-function matrix2fragments(matrix, wordsize=4) 
-    
+
+
+
+######=====matrix=fragmentation====######
+
+function coords2fragments(matrix, wordsize=4) 
+    #split matrix into fragments
+
     backbone_length = 3
     wsize = wordsize * backbone_length # 4 backbone residue fragment contains 12 atoms (3 atoms for each residue: N, CA, C).
     msize = size(matrix)[1]
@@ -174,12 +181,39 @@ function matrix2fragments(matrix, wordsize=4)
     return fragmentsmatrix
 end
 
-#split matrix into fragments
-function matrix2distancefragments(matrix, wordsize=4) 
 
-    return fragmentsmatrix
+function distancematrix(xyzcoords::Matrix, min_seq_dist::Int = 0)::Matrix
+    # make a distance matrix from xyz coordinates, 
+    # the N sequential neighbors can be excluded by min_seq_dist
+    matirx_lengnt = size(xyzcoords, 1)
+ 
+    distmatrix = pairwise(Euclidean(), xyzcoords, dims=1)
+    #matrixmax = maximum(distmatrix)
+    for i in 1:matirx_lengnt-min_seq_dist
+     distmatrix[i:i+min_seq_dist, i:i+min_seq_dist,] .= 1e9 #matrixmax
+    end
+
+    return distmatrix
 end
 
 
-######=====pdb2matrix2pdb====######
+function matrix_knn(D::Matrix, k::Int=1)::Matrix
+    # returns k nearest neighbor from a distance matrix
+    return mapslices(x -> partialsortperm(x, 1:k), D, dims=2) 
+end
+
+
+function matrix2knnfragments(xyzcoords::Matrix, wordsize::Int=6, min_seq_dist::Int=0)::Vector{Matrix}
+    # returns coordinates corresponding to knn indexes
+    nxyz = size(xyzcoords, 1)
+    distmatrix = distancematrix(xyzcoords, min_seq_dist)
+    neighbor_list_index = matrix_knn(distmatrix, wordsize)
+    
+    knnfragments = [xyzcoords[push!(neighbor_list_index[i,:], i),:] for i in 1:nxyz]
+
+    return knnfragments
+end
+
+
+######=====matrix=fragmentation====######
 

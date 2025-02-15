@@ -6,30 +6,14 @@ using Distances
 include("entropy.jl")
 
 
-function distancematrix(xyzcoords, min_seq_dist = 0)
-
-    matirx_lengnt = size(xyzcoords, 1)
- 
-    distmatrix = pairwise(Euclidean(), xyzcoords, dims=1)
-    
-    if min_seq_dist > 0
-       for i in 1:matirx_lengnt-min_seq_dist
-        distmatrix[i:i+min_seq_dist, i:i+min_seq_dist,] .= 1e9
-       end
-    end
-
-    return distmatrix
-end
-
-
 #alighn and report rmsd or TMscore
-function kabsch_umeyama(m1,m2)
+function kabsch_umeyama(m1::Matrix,m2::Matrix)
 
-    function translate_to_centroid(coord_matrix)
+    function translate_to_centroid(coords)
         # Normalises the molecular coordinates by centering them.
-        center = [mean(coord_matrix[:,1]);mean(coord_matrix[:,2]);mean(coord_matrix[:,3])]
+        center = [mean(coords[:,1]);mean(coords[:,2]);mean(coords[:,3])]
         centroid = transpose(center)
-        translated_geom = broadcast(-,coord_matrix,centroid)
+        translated_geom = broadcast(-,coords,centroid)
         return translated_geom
     end
     
