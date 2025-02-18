@@ -1,10 +1,12 @@
 ToDo:
-    ☐ foldexity using distant contacts
-    ☐ kabasch single function
+    ✔ foldexity using distant contacts @done (2/18/2025, 9:03:22 AM)
+    ☐ foldexity with virtual torsions
+    ☐ parallel kabasch
     ☐ relative entropy of an alphabet 2-mers in aa, mu & 3di; from RE r_ij = log(p_i) + log(p_j) - log(p_ij);  R = (1/N) sum_ij |r_ij|
     ☐ Clustering algorithm
     ☐ clustering withot cutoff and UPGMA
     ☐ clustered backbone visualizaiton in plotly
+    ☐ multiscale complexity from a distance matrix or all-vs-all
     Done:
         ✔ pdb2dssp @done (2/13/2025, 9:46:07 PM)
         ✔ residue correlation between AA/3di/Mu alphabets @done (2/13/2025, 1:04:25 PM)

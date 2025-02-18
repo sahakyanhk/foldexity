@@ -28,9 +28,14 @@ function readfasta(input::String)
 end
 
 
+function shuffle_string(s) 
+    return String(shuffle(collect(s)))
+end
+
+
 function structure2fs3di(input::String, output::String = "tmp", keep_3di::Bool=false)
     #redirect_stdout(devnull)
-    run(`bin/foldseek structureto3didescriptor -v 0 $input $output`)
+    run(`../bin/foldseek structureto3didescriptor -v 0 $input $output`)
     df = CSV.read(output, DataFrame, delim="\t", header=["id","seqaa", "seq3di", "coords"])
     if !keep_3di
         rm.([output, "$output.dbtype"], force=true)
@@ -42,7 +47,7 @@ end
 
 function structure2rsmu(input::String, output::String = "tmp", keep_mu::Bool=false)
     #redirect_stdout(devnull)
-    run(`bin/reseek -convert2mu $input -fasta $output`)
+    run(`../bin/reseek -convert2mu $input -fasta $output`)
     df = readfasta(output)
     if !keep_mu
         rm.([output, "$output.dbtype"], force=true)
@@ -61,7 +66,7 @@ function structure2dssp(input::String, output::String = "tmp", keep_mu::Bool=fal
     for pdb in readdir(path)
         pdbname = string(split(pdb, ".")[1])
         try
-            dssp_cmd = pipeline(`bin/dssp $path/$pdb`, `sed -n '/#/,$p'`, `awk '{print substr($0, 17,1)}'`, `tr ' ' 'C'`, `tr -d '\n'`)
+            dssp_cmd = pipeline(`../bin/dssp $path/$pdb`, `sed -n '/#/,$p'`, `awk '{print substr($0, 17,1)}'`, `tr ' ' 'C'`, `tr -d '\n'`)
             ss = read(dssp_cmd, String)
             if true #check if valid string
                 push!(df, [pdbname, ss])
