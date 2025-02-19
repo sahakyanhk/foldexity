@@ -115,6 +115,8 @@ end
 
 
 function lz76(sequence, k)
+    
+    # from https://github.com/Naereen/LempelZiv.jl/blob/master/src/LempelZiv.jl 
 
     if k > 1
         sequence = split2kmers(sequence, k)
