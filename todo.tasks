@@ -1,5 +1,9 @@
 ToDo:
     ✔ foldexity using distant contacts @done (2/18/2025, 9:03:22 AM)
+    ☐ convert md trajectories (cpptraj)
+    ☐ read/split multiple pdb file
+    ☐ read XTC just in Julia
+    ☐ add LZ76 for sequence complexity measurment
     ☐ foldexity with virtual torsions
     ☐ parallel kabasch
     ☐ relative entropy of an alphabet 2-mers in aa, mu & 3di; from RE r_ij = log(p_i) + log(p_j) - log(p_ij);  R = (1/N) sum_ij |r_ij|

@@ -67,6 +67,42 @@ function readpdb_calpha(pdb_file::String)
 end
 
 
+function cpptraj(parm, trajin,  b, e, offset, outpath, keep_log::Bool=false)
+    
+    if isdir(outpath)
+        rm(outpath, recursive=true, force=true)
+    end
+    
+    mkpath(outpath)
+
+    output = joinpath(outpath, "frame")
+
+    cpptraj_input = """
+    parm $parm 
+    trajin $trajin $b $e $offset
+    autoimage
+    rms fit @CA
+    trajout $output pdb nobox multi
+    go
+    """
+
+    open(`../bin/cpptraj`, "w", stdin) do io
+        write(io, cpptraj_input)
+    end
+
+    for file in readdir(outpath, join=true)
+        frame = split(basename(file),".")[2]
+        mv(file, "$outpath/$frame.pdb")
+    end
+
+    if !keep_log
+        rm("cpptraj.log", force=true)
+    end
+
+
+
+end
+
 
 #write a pdb file
 function writepdb(pdb, pdbpath="output.pdb")

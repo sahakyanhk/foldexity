@@ -57,7 +57,6 @@ function structure2rsmu(input::String, output::String = "tmp", keep_mu::Bool=fal
 end
 
 
-
 function structure2dssp(input::String, output::String = "tmp", keep_mu::Bool=false)
     
     path = input
@@ -80,10 +79,10 @@ function structure2dssp(input::String, output::String = "tmp", keep_mu::Bool=fal
 end
 
 
-
 function split2kmers(seq, k)
     return [seq[i:i+k-1] for i in 1:length(seq)-k]
 end
+
 
 function entropy_shannon(kmers, k=1)
 
@@ -113,6 +112,37 @@ function entropy_profile(seq, k=12)
     return entropy_shannon.([kmer for kmer in k_mers])
 
 end
+
+
+function lz76(sequence, k)
+
+    if k > 1
+        sequence = split2kmers(sequence, k)
+    end
+
+    sub_strings = Set()
+    n = length(sequence)
+
+    ind = 1
+    inc = 0
+    while true
+        if ind + inc > n
+            break
+        end
+        sub_str = sequence[ind : ind + inc]
+        if sub_str in sub_strings
+            inc += 1
+        else
+            push!(sub_strings, sub_str)
+            ind += (inc+1)
+            inc = 0
+        end
+    end
+
+    return length(sub_strings)
+end
+    
+
 
 
 if abspath(PROGRAM_FILE) == @__FILE__
