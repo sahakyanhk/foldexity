@@ -5,7 +5,7 @@ include("fxio.jl")
 include("kabsch_umeyama.jl")
 
 #calculate fxity for a pdb file
-function fxpdb(pdbpath::String, ksize::Int = 4, cutoff::Float32 = 1.0)
+function fxpdb(pdbpath::String, ksize::Int = 4, ktype::String = "knn", cutoff::Float32 = 1.0)
     println("Starting foldexity...")
     pdb = readpdb_backbone(pdbpath)
     if missing_residues(pdb)
@@ -21,7 +21,16 @@ function fxpdb(pdbpath::String, ksize::Int = 4, cutoff::Float32 = 1.0)
 end
 
 #calculate fxity for all pdb files in the directory
-function fxdir(dirpath, outfile = "fxdata.tsv", ksize=4, cutoff = 1.0, printdata = false)
+function fxdir(dirpath, outfile = "fxdata.tsv", ksize=4, ktype = "knn", cutoff = 1.0, printdata = false)
+
+    if ktype == "knn" || ktype == "k_nearest_neigbors" 
+        fragmeter = coords2knnfragments
+    elseif ktype == "seq" || ktype == "sequencial"
+        fragmeter = coords2fragments
+    else 
+        println("Warninin unknown fragmenter, k_nearest_neigbors will be used")
+    end
+        
     
     pdbpaths = []
     for (root, _, files) in walkdir(dirpath)
@@ -52,8 +61,8 @@ function fxdir(dirpath, outfile = "fxdata.tsv", ksize=4, cutoff = 1.0, printdata
                 continue
             end
             xyzcoords = pdb2xyz(pdb)
-            megax = coords2knnfragments(xyzcoords, ksize)
-#            megax = coords2fragments(xyzcoords, ksize)
+#            megax = coords2knnfragments(xyzcoords, ksize)
+            megax = coords2fragments(xyzcoords, ksize)
             fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix  = fxity_kabsh(megax, cutoff)
             data = "$i\t$pdbpath\t$fxity\t$aver_rmsd\t$nclusts\t$norm_nclusts\t$nfrags\n"
             push!(data_collector, data)
@@ -106,6 +115,10 @@ if abspath(PROGRAM_FILE) == @__FILE__
                 help = "kmer size"
                 arg_type = Int
                 default = 4
+            "--ktype", "-t"
+                help = "kmer type"
+                arg_type = Strung
+                default = "knn"
             "--cutoff", "-c"
                 arg_type = Float64
                 default = 1.0
@@ -119,6 +132,7 @@ if abspath(PROGRAM_FILE) == @__FILE__
     inputpath = args["inputpath"]
     outpath = args["outpath"]
     ksize = args["ksize"]
+    ktype = args["ktype"]
     cutoff = args["cutoff"]
 
     # inputpath = ARGS[1]
@@ -127,9 +141,9 @@ if abspath(PROGRAM_FILE) == @__FILE__
     # cutoff = parse(Float64, ARGS[4])
     try
         if isdir(inputpath)
-            fxdir(inputpath, outpath, ksize, cutoff)  
+            fxdir(inputpath, outpath, ksize, type, cutoff)  
         elseif isfile(inputpath)
-            fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, all_vs_all_matrix = fxpdb(inputpath, ksize, cutoff)  
+            fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, all_vs_all_matrix = fxpdb(inputpath, ksize, cutoff, ktype)  
             println("$fxity\t$aver_rmsd\t$nclusts\t$norm_nclusts\t$nfrags")  
         else
             println("Error: The path '$inputpath' is neither a directory nor a file.")
