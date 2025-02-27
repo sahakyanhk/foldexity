@@ -1,6 +1,8 @@
-#foldseek structureto3didescriptor 1hv4.pdb 1hv4_3di.dump
 using DataFrames
 using CSV
+
+include("fxio.jl")
+
 
 function readfasta(input::String)
     df = DataFrame([[],[]], ["id", "seq"])
@@ -34,7 +36,6 @@ end
 
 
 function structure2fs3di(input::String, output::String = "tmp", keep_3di::Bool=false)
-    #redirect_stdout(devnull)
     run(`../bin/foldseek structureto3didescriptor -v 0 $input $output`)
     df = CSV.read(output, DataFrame, delim="\t", header=["id","seqaa", "seq3di", "coords"])
     if !keep_3di
@@ -46,8 +47,8 @@ end
 
 
 function structure2rsmu(input::String, output::String = "tmp", keep_mu::Bool=false)
-    #redirect_stdout(devnull)
-    run(`../bin/reseek -convert2mu $input -fasta $output`)
+    redirect_stdout(devnull)
+    run(pipeline(`../bin/reseek -convert2mu $input -fasta $output`, stdout=devnull, stderr=devnull))
     df = readfasta(output)
     if !keep_mu
         rm.([output, "$output.dbtype"], force=true)
@@ -57,7 +58,7 @@ function structure2rsmu(input::String, output::String = "tmp", keep_mu::Bool=fal
 end
 
 
-function structure2dssp(input::String, output::String = "tmp", keep_mu::Bool=false)
+function structure2dssp(input::String, output::String = "")
     
     path = input
     df = DataFrame([[],[]], ["id", "ss"])
@@ -67,24 +68,28 @@ function structure2dssp(input::String, output::String = "tmp", keep_mu::Bool=fal
         try
             dssp_cmd = pipeline(`../bin/dssp $path/$pdb`, `sed -n '/#/,$p'`, `awk '{print substr($0, 17,1)}'`, `tr ' ' 'C'`, `tr -d '\n'`)
             ss = read(dssp_cmd, String)
-            if true #check if valid string
+            if typeof(ss) == String #check if valid string
                 push!(df, [pdbname, ss])
             end
         catch 
-            println("warrning")
+            println("Warrning")
         end    
     end
 
-    return df
+    if output != ""
+        CSV.write(output, df, writeheader=false)
+    else
+        return df
+    end
 end
 
 
-function split2kmers(seq, k)
+function split2kmers(seq, k::Int)
     return [seq[i:i+k-1] for i in 1:length(seq)-k]
 end
 
 
-function entropy_shannon(kmers, k=1)
+function entropy_shannon(kmers, k::Int=1)
 
     if k > 1
         kmers = split2kmers(kmers, k)
@@ -99,13 +104,36 @@ function entropy_shannon(kmers, k=1)
     
     probabilities = [count / seqlen for count in values(counts)]    
     entropy = -sum([p * log2(p) for p in probabilities])
-    #norm_entropy = entropy / length(counts)
+    norm_entropy = -sum([(p/seqlen) * (log2(p)/seqlen) for p in probabilities])
     return  entropy #, norm_entropy
 end
 
-function entropy_profile(seq, k=12)
+function entropy_shannon_norm(kmers, k::Int=1)
 
     if k > 1
+        kmers = split2kmers(kmers, k)
+    end
+
+    seqlen = length(kmers)
+
+    counts = Dict{Any, Int}()
+    for kmer in kmers
+        counts[kmer] = get(counts, kmer, 0) + 1
+    end
+    
+    probabilities = [count / seqlen for count in values(counts)]    
+    entropy = -sum([p * log2(p) for p in probabilities])
+    norm_entropy = -sum([(p/seqlen) * (log2(p)/seqlen) for p in probabilities])
+    return  entropy #, norm_entropy
+end
+
+
+function entropy_profile(seq, k::Int=12)
+
+    if k >= 12
+        k_mers = split2kmers(seq, k)
+    elseif k < 12
+        print("Warrning kmar might be too small")
         k_mers = split2kmers(seq, k)
     end
 

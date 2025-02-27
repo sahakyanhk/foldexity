@@ -72,9 +72,9 @@ function fxity_kabsh(xyzcoords, cutoff = 1.0)
         nclusts = length(unique(results))
         norm_nclusts = nclusts / nfrags
 
-        fxity = entropy_shannon(results, 1)
+        foldexity = entropy_shannon(results, 1)
 
-        return fxity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix 
+        return foldexity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix 
         
     catch err
         print(err)

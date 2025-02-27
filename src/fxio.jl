@@ -1,6 +1,17 @@
 using Printf
 using Distances
 
+one2three = Dict('C'=> "CYS", 'D'=> "ASP", 'S'=> "SER", 'Q'=> "GLN", 'K'=> "LYS",
+                 'I'=> "ILE", 'P'=> "PRO", 'T'=> "THR", 'F'=> "PHE", 'N'=> "ASN", 
+                 'G'=> "GLY", 'H'=> "HIS", 'L'=> "LEU", 'R'=> "ARG", 'W'=> "TRP", 
+                 'A'=> "ALA", 'V'=> "VAL", 'E'=> "GLU", 'Y'=> "TYR", 'M'=> "MET")
+
+
+three2one = Dict("CYS"=> 'C', "ASP"=> 'D', "SER"=> 'S', "GLN"=> 'Q', "LYS"=> 'K',
+                 "ILE"=> 'I', "PRO"=> 'P', "THR"=> 'T', "PHE"=> 'F', "ASN"=> 'N', 
+                 "GLY"=> 'G', "HIS"=> 'H', "LEU"=> 'L', "ARG"=> 'R', "TRP"=> 'W', 
+                 "ALA"=> 'A', "VAL"=> 'V', "GLU"=> 'E', "TYR"=> 'Y', "MET"=> 'M')
+
 #readpdb from file
 mutable struct PDBdata
     ndx::Vector{Int} # The sequential index of the atoms 
@@ -175,6 +186,14 @@ function pdb2xyz(pdb)
     return hcat(pdb.x, pdb.y, pdb.z)    
 end
 
+function pdb2fasta(pdb)
+    
+    resname_sequence = pdb.resname[pdb.atomname .== "CA"]
+
+    fasta = join([three2one[RES] for RES=resname_sequence])
+
+    return fasta 
+end
 
 function pdbmatrix2pdb(matrix)
     
@@ -205,19 +224,6 @@ end
 
 ######=====matrix=fragmentation====######
 
-function coords2fragments(matrix, wordsize=4) 
-    #split matrix into fragments
-
-    backbone_length = 3
-    wsize = wordsize * backbone_length # 4 backbone residue fragment contains 12 atoms (3 atoms for each residue: N, CA, C).
-    msize = size(matrix)[1]
-    
-    fragmentsmatrix = [matrix[i:i-1+wsize,:] for i=1:3:msize-wsize+1]
-
-    return fragmentsmatrix
-end
-
-
 function distancematrix(xyzcoords::Matrix, min_seq_dist::Int = 0)::Matrix
     # make a distance matrix from xyz coordinates, 
     # the N sequential neighbors can be excluded by min_seq_dist
@@ -233,13 +239,26 @@ function distancematrix(xyzcoords::Matrix, min_seq_dist::Int = 0)::Matrix
 end
 
 
-function matrix_knn(D::Matrix, k::Int=1)::Matrix
-    # returns k nearest neighbor from a distance matrix
+function matrix_knn(D::Matrix, k::Int=10)::Matrix
+    # returns k nearest neighbors from a distance matrix
     return mapslices(x -> partialsortperm(x, 1:k), D, dims=2) 
 end
 
 
-function coords2knnfragments(xyzcoords::Matrix, wordsize::Int=6, min_seq_dist::Int=0)::Vector{Matrix}
+function coords2kmers(matrix, wordsize=4) 
+    #split matrix into fragments
+
+    backbone_length = 3
+    wsize = wordsize * backbone_length # 4 backbone residue fragment contains 12 atoms (3 atoms for each residue: N, CA, C).
+    msize = size(matrix)[1]
+    
+    fragmentsmatrix = [matrix[i:i-1+wsize,:] for i=1:3:msize-wsize+1]
+
+    return fragmentsmatrix
+end
+
+
+function coords2knn(xyzcoords::Matrix, wordsize::Int=6, min_seq_dist::Int=0)::Vector{Matrix}
     # returns coordinates corresponding to knn indexes
     nxyz = size(xyzcoords, 1)
     distmatrix = distancematrix(xyzcoords, min_seq_dist)
