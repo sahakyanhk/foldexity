@@ -1,16 +1,6 @@
 using Printf
 using Distances
 
-one2three = Dict('C'=> "CYS", 'D'=> "ASP", 'S'=> "SER", 'Q'=> "GLN", 'K'=> "LYS",
-                 'I'=> "ILE", 'P'=> "PRO", 'T'=> "THR", 'F'=> "PHE", 'N'=> "ASN", 
-                 'G'=> "GLY", 'H'=> "HIS", 'L'=> "LEU", 'R'=> "ARG", 'W'=> "TRP", 
-                 'A'=> "ALA", 'V'=> "VAL", 'E'=> "GLU", 'Y'=> "TYR", 'M'=> "MET")
-
-
-three2one = Dict("CYS"=> 'C', "ASP"=> 'D', "SER"=> 'S', "GLN"=> 'Q', "LYS"=> 'K',
-                 "ILE"=> 'I', "PRO"=> 'P', "THR"=> 'T', "PHE"=> 'F', "ASN"=> 'N', 
-                 "GLY"=> 'G', "HIS"=> 'H', "LEU"=> 'L', "ARG"=> 'R', "TRP"=> 'W', 
-                 "ALA"=> 'A', "VAL"=> 'V', "GLU"=> 'E', "TYR"=> 'Y', "MET"=> 'M')
 
 #readpdb from file
 mutable struct PDBdata
@@ -25,57 +15,84 @@ mutable struct PDBdata
     z::Vector{Float32}
 end
 
-function readpdb_backbone(pdb_file::String)
 
-    pdb = PDBdata(Int[], Int[], String[], String[], String[], Int32[], Float32[], Float32[], Float32[] )
+function readpdb_backbone(pdb_file::String)
+    if !isfile(pdb_file)
+        error("File not found: $pdb_file")
+    end
+
+    pdb = PDBdata(Int[], Int[], String[], String[], String[], Int32[], Float32[], Float32[], Float32[])
     i = 1
-    for line in eachline(open(pdb_file))
-        if startswith(line, "ATOM") 
-            if strip(line[13:16]) == "CA" || strip(line[13:16]) == "C" || strip(line[13:16]) == "N"
-                push!(pdb.ndx, i) #count from 1 to ...
-                push!(pdb.index, parse(Int,strip(line[7:11]))) #index in original pdb
-                push!(pdb.atomname, strip(line[13:16]))
-                push!(pdb.resname, strip(line[17:21]))
-                push!(pdb.chain, strip(line[22:22]))
-                push!(pdb.resid, parse(Int,strip(line[23:26])))
-                push!(pdb.x, parse(Float32, strip(line[31:38])))
-                push!(pdb.y, parse(Float32, strip(line[39:46])))
-                push!(pdb.z, parse(Float32, strip(line[47:54])))
-                i+=1
+
+    open(pdb_file) do file
+        for line in eachline(file)
+            if startswith(line, "ATOM")
+                atom_type = strip(line[13:16])
+                if atom_type in ["CA", "C", "N"]
+                    try
+                        push!(pdb.ndx, i)
+                        push!(pdb.index, parse(Int, strip(line[7:11])))
+                        push!(pdb.atomname, atom_type)
+                        push!(pdb.resname, strip(line[17:20]))
+                        push!(pdb.chain, strip(line[22:22]))
+                        push!(pdb.resid, parse(Int32, strip(line[23:26])))
+                        push!(pdb.x, parse(Float32, strip(line[31:38])))
+                        push!(pdb.y, parse(Float32, strip(line[39:46])))
+                        push!(pdb.z, parse(Float32, strip(line[47:54])))
+                        i += 1
+                    catch e
+                        println("Error parsing line: $line\n$e")
+                    end
+                end
+            end
+            if startswith(line, "ENDMDL")
+                break
             end
         end
-        if startswith(line, "ENDMDL")
-            break
-        end
     end
+
     return pdb
 end
+
 
 function readpdb_calpha(pdb_file::String)
+    if !isfile(pdb_file)
+        error("File not found: $pdb_file")
+    end
 
-    pdb = PDBdata(Int[], Int[], String[], String[], String[], Int32[], Float32[], Float32[], Float32[] )
+    pdb = PDBdata(Int[], Int[], String[], String[], String[], Int32[], Float32[], Float32[], Float32[])
     i = 1
-    for line in eachline(open(pdb_file))
-        if startswith(line, "ATOM") 
-            if strip(line[13:16]) == "CA" 
-                push!(pdb.ndx, i) #count from 1 to ...
-                push!(pdb.index, parse(Int,strip(line[7:11]))) #index in original pdb
-                push!(pdb.atomname, strip(line[13:16]))
-                push!(pdb.resname, strip(line[17:21]))
-                push!(pdb.chain, strip(line[22:22]))
-                push!(pdb.resid, parse(Int,strip(line[23:26])))
-                push!(pdb.x, parse(Float32, strip(line[31:38])))
-                push!(pdb.y, parse(Float32, strip(line[39:46])))
-                push!(pdb.z, parse(Float32, strip(line[47:54])))
-                i+=1
+
+    open(pdb_file) do file
+        for line in eachline(file)
+            if startswith(line, "ATOM")
+                atom_type = strip(line[13:16])
+                if atom_type == "CA"
+                    try
+                        push!(pdb.ndx, i)
+                        push!(pdb.index, parse(Int, strip(line[7:11])))
+                        push!(pdb.atomname, atom_type)
+                        push!(pdb.resname, strip(line[17:20]))
+                        push!(pdb.chain, strip(line[22:22]))
+                        push!(pdb.resid, parse(Int32, strip(line[23:26])))
+                        push!(pdb.x, parse(Float32, strip(line[31:38])))
+                        push!(pdb.y, parse(Float32, strip(line[39:46])))
+                        push!(pdb.z, parse(Float32, strip(line[47:54])))
+                        i += 1
+                    catch e
+                        println("Error parsing line: $line\n$e")
+                    end
+                end
+            end
+            if startswith(line, "ENDMDL")
+                break
             end
         end
-        if startswith(line, "ENDMDL")
-            break
-        end
     end
+
     return pdb
 end
+
 
 
 function cpptraj(parm, trajin,  b, e, offset, outpath, keep_log::Bool=false)
@@ -187,10 +204,22 @@ function pdb2xyz(pdb)
 end
 
 function pdb2fasta(pdb)
+
+    one2three = Dict('C'=> "CYS", 'D'=> "ASP", 'S'=> "SER", 'Q'=> "GLN", 'K'=> "LYS",
+                 'I'=> "ILE", 'P'=> "PRO", 'T'=> "THR", 'F'=> "PHE", 'N'=> "ASN", 
+                 'G'=> "GLY", 'H'=> "HIS", 'L'=> "LEU", 'R'=> "ARG", 'W'=> "TRP", 
+                 'A'=> "ALA", 'V'=> "VAL", 'E'=> "GLU", 'Y'=> "TYR", 'M'=> "MET")
+
+
+    three2one = Dict("CYS"=> 'C', "ASP"=> 'D', "SER"=> 'S', "GLN"=> 'Q', "LYS"=> 'K',
+                 "ILE"=> 'I', "PRO"=> 'P', "THR"=> 'T', "PHE"=> 'F', "ASN"=> 'N', 
+                 "GLY"=> 'G', "HIS"=> 'H', "LEU"=> 'L', "ARG"=> 'R', "TRP"=> 'W', 
+                 "ALA"=> 'A', "VAL"=> 'V', "GLU"=> 'E', "TYR"=> 'Y', "MET"=> 'M')
+
     
     resname_sequence = pdb.resname[pdb.atomname .== "CA"]
 
-    fasta = join([three2one[RES] for RES=resname_sequence])
+    fasta = [three2one[RES] for RES=resname_sequence]
 
     return fasta 
 end
@@ -245,10 +274,17 @@ function matrix_knn(D::Matrix, k::Int=10)::Matrix
 end
 
 
-function coords2kmers(matrix, wordsize=4) 
+function coords2kmers(matrix, wordsize=4,  filter="ca") 
     #split matrix into fragments
+    
+    if filter == "bb"
+        backbone_length = 3
+    elseif filter == "ca"
+        backbone_length = 1
+    else
+        error("Valid option are bb (backbone N, CA, C) or CA (CA only)")
+    end
 
-    backbone_length = 3
     wsize = wordsize * backbone_length # 4 backbone residue fragment contains 12 atoms (3 atoms for each residue: N, CA, C).
     msize = size(matrix)[1]
     
@@ -267,6 +303,17 @@ function coords2knn(xyzcoords::Matrix, wordsize::Int=6, min_seq_dist::Int=0)::Ve
     knnfragments = [xyzcoords[push!(neighbor_list_index[i,:], i),:] for i in 1:nxyz]
 
     return knnfragments
+end
+
+
+function pdb2seqxyz(pdbpath::String)
+    #returns a matrix with the sequence in the 1th column and xyz in 2-4
+    pdb = readpdb_calpha(pdbpath)
+    seq = pdb2fasta(pdb)
+    
+    xyz = pdb2xyz(pdb)
+    
+    return hcat(seq, xyz)
 end
 
 
