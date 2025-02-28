@@ -82,3 +82,38 @@ function fxity_kabsh(xyzcoords, cutoff = 1.0)
     end
 end
 
+
+function dihedaral(xyzmatrix::Matrix{T}) where {T}
+
+    if size(xyzmatrix) != (4, 3)
+
+        error("Input matrix must be of size (4, 3)!")
+
+    end
+
+    p1 = xyzmatrix[1,1:3]
+    p2 = xyzmatrix[2,1:3]
+    p3 = xyzmatrix[3,1:3]
+    p4 = xyzmatrix[4,1:3]
+
+    b1 = p2 .- p1
+    b2 = p3 .- p2
+    b3 = p4 .- p3
+
+    # Normalize the vectors
+    b1 /= norm(b1)
+    b2 /= norm(b2)
+    b3 /= norm(b3)
+
+    # Compute normals
+    n1 = cross(b1, b2)
+    n2 = cross(b2, b3)
+
+    # Compute the angle
+    x = dot(n1, n2)
+    y = dot(cross(n1, n2), b2)
+
+    angle = atan(y, x)
+    return angle * (180 / π)  # Convert to degrees
+
+end
