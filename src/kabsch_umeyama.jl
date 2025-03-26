@@ -83,7 +83,8 @@ function fxity_kabsh(xyzcoords, cutoff = 1.0)
 end
 
 
-function dihedaral(xyzmatrix::Matrix{T}) where {T}
+
+function dihedral(xyzmatrix::Matrix{T}) where {T}
 
     if size(xyzmatrix) != (4, 3)
 
@@ -101,19 +102,30 @@ function dihedaral(xyzmatrix::Matrix{T}) where {T}
     b3 = p4 .- p3
 
     # Normalize the vectors
-    b1 /= norm(b1)
-    b2 /= norm(b2)
-    b3 /= norm(b3)
+    norm_b1 = norm(b1)
+    norm_b2 = norm(b2)
+    norm_b3 = norm(b3)
+
+    norm_vec1 = b1 ./ norm_b1
+    norm_vec2 = b2 ./ norm_b2
+    norm_vec3 = b3 ./ norm_b3
 
     # Compute normals
-    n1 = cross(b1, b2)
-    n2 = cross(b2, b3)
+    n1 = cross(norm_vec1, norm_vec2)
+    n2 = cross(norm_vec2, norm_vec3)
 
-    # Compute the angle
+    # Compute the dihidral
     x = dot(n1, n2)
-    y = dot(cross(n1, n2), b2)
+    y = dot(cross(n1, n2), norm_vec2)
 
-    angle = atan(y, x)
-    return angle * (180 / π)  # Convert to degrees
+    dihidral = atan(y, x) * (180 / π)  # Converted to degrees * (180 / π)
+
+    # Compute angles
+    angle1 = acos(dot(b1, b2) / (norm_b1 * norm_b2)) * (180 / π)
+    angle2 = acos(dot(b2, b3) / (norm_b2 * norm_b3)) * (180 / π)
+
+
+    return dihidral, angle1, angle2
 
 end
+
