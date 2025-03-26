@@ -84,7 +84,7 @@ end
 
 
 
-function dihedral(xyzmatrix::Matrix{T}) where {T}
+function vtor(xyzmatrix::Matrix{T}) where {T}
 
     if size(xyzmatrix) != (4, 3)
 
@@ -125,7 +125,8 @@ function dihedral(xyzmatrix::Matrix{T}) where {T}
     angle2 = acos(dot(b2, b3) / (norm_b2 * norm_b3)) * (180 / π)
 
 
-    return dihidral, angle1, angle2
+
+    return [dihidral, angle1, angle2]
 
 end
 
