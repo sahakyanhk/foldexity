@@ -83,13 +83,10 @@ function fxity_kabsh(xyzcoords, cutoff = 1.0)
 end
 
 
-
 function vtor(xyzmatrix::Matrix{T}) where {T}
 
     if size(xyzmatrix) != (4, 3)
-
         error("Input matrix must be of size (4, 3)!")
-
     end
 
     p1 = xyzmatrix[1,1:3]

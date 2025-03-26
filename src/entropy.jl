@@ -66,7 +66,7 @@ function structure2dssp(input::String, output::String = "")
     for pdb in readdir(path)
         pdbname = string(split(pdb, ".")[1])
         try
-            dssp_cmd = pipeline(`../bin/dssp $path/$pdb`, `sed -n '/#/,$p'`, `awk '{print substr($0, 17,1)}'`, `tr ' ' 'C'`, `tr -d '\n'`)
+            dssp_cmd = pipeline(`../bin/dssp $path/$pdb`, `sed -n '/#/,$p'`, `awk '{print substr($0, 17,1)}'`, `tr ' ' 'C'`, `tr -d '\n'`, `sed -e 's/.$//'`)
             ss = read(dssp_cmd, String)
             if typeof(ss) == String #check if valid string
                 push!(df, [pdbname, ss])

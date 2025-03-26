@@ -282,15 +282,15 @@ function coords2kmers(matrix, wordsize=4,  filter="ca")
     elseif filter == "ca"
         backbone_length = 1
     else
-        error("Valid option are bb (backbone N, CA, C) or CA (CA only)")
+        error("Valid option are bb (backbone N, CA, C) or ca (CA only)")
     end
 
     wsize = wordsize * backbone_length # 4 backbone residue fragment contains 12 atoms (3 atoms for each residue: N, CA, C).
     msize = size(matrix)[1]
     
-    fragmentsmatrix = [matrix[i:i-1+wsize,:] for i=1:3:msize-wsize+1]
+    matrixkmers = [matrix[i:i-1+wsize,:] for i=1:msize-wsize+1]
 
-    return fragmentsmatrix
+    return matrixkmers
 end
 
 
@@ -305,6 +305,14 @@ function coords2knn(xyzcoords::Matrix, wordsize::Int=6, min_seq_dist::Int=0)::Ve
     return knnfragments
 end
 
+function seq2kmers(seq, wsize=4) 
+    #split matrix into fragments
+
+    seqlen = length(seq)
+    seqkmers = [seq[i:i-1+wsize] for i=1:seqlen-wsize+1]
+
+    return seqkmers
+end
 
 function pdb2seqxyz(pdbpath::String)
     #returns a matrix with the sequence in the 1th column and xyz in 2-4
