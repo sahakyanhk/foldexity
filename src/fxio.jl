@@ -33,7 +33,7 @@ function readpdb_backbone(pdb_file::String)
                         push!(pdb.ndx, i)
                         push!(pdb.index, parse(Int, strip(line[7:11])))
                         push!(pdb.atomname, atom_type)
-                        push!(pdb.resname, strip(line[17:20]))
+                        push!(pdb.resname, strip(line[18:20]))
                         push!(pdb.chain, strip(line[22:22]))
                         push!(pdb.resid, parse(Int32, strip(line[23:26])))
                         push!(pdb.x, parse(Float32, strip(line[31:38])))
@@ -72,7 +72,7 @@ function readpdb_calpha(pdb_file::String)
                         push!(pdb.ndx, i)
                         push!(pdb.index, parse(Int, strip(line[7:11])))
                         push!(pdb.atomname, atom_type)
-                        push!(pdb.resname, strip(line[17:20]))
+                        push!(pdb.resname, strip(line[18:20]))
                         push!(pdb.chain, strip(line[22:22]))
                         push!(pdb.resid, parse(Int32, strip(line[23:26])))
                         push!(pdb.x, parse(Float32, strip(line[31:38])))
@@ -253,6 +253,7 @@ end
 
 ######=====matrix=fragmentation====######
 
+
 function distancematrix(xyzcoords::Matrix, min_seq_dist::Int = 0)::Matrix
     # make a distance matrix from xyz coordinates, 
     # the N sequential neighbors can be excluded by min_seq_dist
@@ -271,6 +272,18 @@ end
 function matrix_knn(D::Matrix, k::Int=10)::Matrix
     # returns k nearest neighbors from a distance matrix
     return mapslices(x -> partialsortperm(x, 1:k), D, dims=2) 
+end
+
+
+function coords2knn(xyzcoords::Matrix, wordsize::Int=6, min_seq_dist::Int=0)::Vector{Matrix}
+    # returns coordinates corresponding to knn indexes
+    nxyz = size(xyzcoords, 1)
+    distmatrix = distancematrix(xyzcoords, min_seq_dist)
+    neighbor_list_index = matrix_knn(distmatrix, wordsize)
+    
+    knnfragments = [xyzcoords[push!(neighbor_list_index[i,:], i),:] for i in 1:nxyz]
+
+    return knnfragments
 end
 
 
@@ -294,17 +307,6 @@ function coords2kmers(matrix, wordsize=4,  filter="ca")
 end
 
 
-function coords2knn(xyzcoords::Matrix, wordsize::Int=6, min_seq_dist::Int=0)::Vector{Matrix}
-    # returns coordinates corresponding to knn indexes
-    nxyz = size(xyzcoords, 1)
-    distmatrix = distancematrix(xyzcoords, min_seq_dist)
-    neighbor_list_index = matrix_knn(distmatrix, wordsize)
-    
-    knnfragments = [xyzcoords[push!(neighbor_list_index[i,:], i),:] for i in 1:nxyz]
-
-    return knnfragments
-end
-
 function seq2kmers(seq, wsize=4) 
     #split matrix into fragments
 
@@ -313,6 +315,7 @@ function seq2kmers(seq, wsize=4)
 
     return seqkmers
 end
+
 
 function pdb2seqxyz(pdbpath::String)
     #returns a matrix with the sequence in the 1th column and xyz in 2-4

@@ -85,9 +85,7 @@ end
 
 function vtor(xyzmatrix::Matrix{T}) where {T}
 
-    if size(xyzmatrix) != (4, 3)
-        error("Input matrix must be of size (4, 3)!")
-    end
+    @assert size(xyzmatrix) == (4, 3)
 
     p1 = xyzmatrix[1,1:3]
     p2 = xyzmatrix[2,1:3]
@@ -118,8 +116,8 @@ function vtor(xyzmatrix::Matrix{T}) where {T}
     dihidral = atan(y, x) * (180 / π)  # Converted to degrees * (180 / π)
 
     # Compute angles
-    angle1 = acos(dot(b1, b2) / (norm_b1 * norm_b2)) * (180 / π)
-    angle2 = acos(dot(b2, b3) / (norm_b2 * norm_b3)) * (180 / π)
+    angle1 = 180 - acos(dot(b1, b2) / (norm_b1 * norm_b2)) * (180 / π)
+    angle2 = 180 - acos(dot(b2, b3) / (norm_b2 * norm_b3)) * (180 / π)
 
 
 
@@ -127,3 +125,6 @@ function vtor(xyzmatrix::Matrix{T}) where {T}
 
 end
 
+function euclid_dist(p1, p2)
+    return sqrt(sum((p2-p1).^2))
+end
