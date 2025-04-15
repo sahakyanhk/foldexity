@@ -51,6 +51,7 @@ function kabsch_umeyama(m1::Matrix,m2::Matrix)
     return RMSD_value
 end
 
+rmsd = kabsch_umeyama
 
 #calculate all-vs-all kabsch rmsd for fragments in the matrix
 function fxity_kabsh(xyzcoords, cutoff = 1.0)    
@@ -83,48 +84,3 @@ function fxity_kabsh(xyzcoords, cutoff = 1.0)
 end
 
 
-function vtor(xyzmatrix::Matrix{T}) where {T}
-
-    @assert size(xyzmatrix) == (4, 3)
-
-    p1 = xyzmatrix[1,1:3]
-    p2 = xyzmatrix[2,1:3]
-    p3 = xyzmatrix[3,1:3]
-    p4 = xyzmatrix[4,1:3]
-
-    b1 = p2 .- p1
-    b2 = p3 .- p2
-    b3 = p4 .- p3
-
-    # Normalize the vectors
-    norm_b1 = norm(b1)
-    norm_b2 = norm(b2)
-    norm_b3 = norm(b3)
-
-    norm_vec1 = b1 ./ norm_b1
-    norm_vec2 = b2 ./ norm_b2
-    norm_vec3 = b3 ./ norm_b3
-
-    # Compute normals
-    n1 = cross(norm_vec1, norm_vec2)
-    n2 = cross(norm_vec2, norm_vec3)
-
-    # Compute the dihidral
-    x = dot(n1, n2)
-    y = dot(cross(n1, n2), norm_vec2)
-
-    dihidral = atan(y, x) * (180 / π)  # Converted to degrees * (180 / π)
-
-    # Compute angles
-    angle1 = 180 - acos(dot(b1, b2) / (norm_b1 * norm_b2)) * (180 / π)
-    angle2 = 180 - acos(dot(b2, b3) / (norm_b2 * norm_b3)) * (180 / π)
-
-
-
-    return [dihidral, angle1, angle2]
-
-end
-
-function euclid_dist(p1, p2)
-    return sqrt(sum((p2-p1).^2))
-end

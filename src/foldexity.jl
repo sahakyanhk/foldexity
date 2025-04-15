@@ -47,7 +47,7 @@ function fxdir(dirpath, outfile = "fxdata.tsv", ksize=4, kmertype = "seq", cutof
         if ksize < 4 
             readpdb = readpdb_backbone
         else 
-            readpdb = readpdb_backbone
+            readpdb = readpdb_calpha
         end
     else 
         println("Warninin unknown fragmenter, k_nearest_neigbors will be used")
