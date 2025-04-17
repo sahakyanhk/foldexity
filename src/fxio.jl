@@ -372,6 +372,29 @@ function vtor(xyzmatrix::Matrix{T}) where {T}
 
 end
 
+function k3angle(xyzmatrix::Matrix{T}) where {T}
+
+    @assert size(xyzmatrix) == (3, 3)
+
+    p1 = xyzmatrix[1,1:3]
+    p2 = xyzmatrix[2,1:3]
+    p3 = xyzmatrix[3,1:3]
+
+    b1 = p2 .- p1
+    b2 = p3 .- p2
+
+    # Normalize the vectors
+    norm_b1 = norm(b1)
+    norm_b2 = norm(b2)
+
+    # Compute angles
+    angle1 = 180 - acos(dot(b1, b2) / (norm_b1 * norm_b2)) * (180 / π)
+
+    return angle1
+
+end
+
+
 function euclid_dist(p1::Vector, p2::Vector)
     return sqrt(sum((p2-p1).^2))
 end

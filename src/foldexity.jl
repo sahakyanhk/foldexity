@@ -3,6 +3,7 @@ using ProgressBars
 
 include("fxio.jl")
 include("kabsch_umeyama.jl")
+include("entropy.jl")
 
 #calculate fxity for a pdb file
 function fxpdb(pdbpath::String, ksize::Int = 4, kmertype::String = "knn", cutoff = 0.5)
