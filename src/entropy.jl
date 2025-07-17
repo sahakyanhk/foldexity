@@ -85,7 +85,9 @@ end
 
 
 function split2kmers(seq, k::Int)
-    return [seq[i:i+k-1] for i in 1:length(seq)-k]
+    seqlen = length(seq)
+    @assert k > 0 && k <= seqlen / 2
+    return [seq[i:i+k-1] for i in 1:seqlen-k+1]
 end
 
 
@@ -133,7 +135,7 @@ function entropy_profile(seq, k::Int=12)
     if k >= 12
         k_mers = split2kmers(seq, k)
     elseif k < 12
-        print("Warrning kmar might be too small")
+        print("Warrning kmer size might be too small")
         k_mers = split2kmers(seq, k)
     end
 
