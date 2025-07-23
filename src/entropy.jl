@@ -91,10 +91,13 @@ function split2kmers(seq, k::Int)
 end
 
 
-function entropy_shannon(kmers, k::Int=1)
+function entropy_shannon(input_data, k::Int=1, norm::Bool=false)
 
     if k > 1
-        kmers = split2kmers(kmers, k)
+        kmers = split2kmers(input_data, k)
+    else
+        # If k=1, treat each character as a "k-mer"
+        kmers = [string(c) for c in input_data] 
     end
 
     seqlen = length(kmers)
@@ -104,29 +107,26 @@ function entropy_shannon(kmers, k::Int=1)
         counts[kmer] = get(counts, kmer, 0) + 1
     end
     
-    probabilities = [count / seqlen for count in values(counts)]    
-    entropy = -sum([p * log2(p) for p in probabilities])
-    norm_entropy = -sum([(p/seqlen) * (log2(p)/seqlen) for p in probabilities])
-    return  entropy #, norm_entropy
-end
-
-function entropy_shannon_norm(kmers, k::Int=1)
-
-    if k > 1
-        kmers = split2kmers(kmers, k)
-    end
-
-    seqlen = length(kmers)
-
-    counts = Dict{Any, Int}()
-    for kmer in kmers
-        counts[kmer] = get(counts, kmer, 0) + 1
-    end
+    probabilities = [count / seqlen for count in values(counts)] 
     
-    probabilities = [count / seqlen for count in values(counts)]    
-    entropy = -sum([p * log2(p) for p in probabilities])
-    norm_entropy = -sum([(p/seqlen) * (log2(p)/seqlen) for p in probabilities])
-    return  entropy #, norm_entropy
+    entropy = 0.0
+    for p in probabilities
+        if p > 0 # Avoid log2(0) 
+            entropy -= p * log2(p)
+        end
+    end
+
+    if norm
+        num_unique_kmers = length(keys(counts))
+        if num_unique_kmers <= 1 # Handle cases that would lead to log2(0) or division by zero
+            return 0.0
+        else
+            max_entropy = log2(num_unique_kmers)
+            entropy = entropy / max_entropy 
+        end
+    end
+
+    return entropy 
 end
 
 
