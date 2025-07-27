@@ -84,13 +84,6 @@ function structure2dssp(input::String, output::String = "")
 end
 
 
-function split2kmers(seq, k::Int)
-    seqlen = length(seq)
-    @assert k > 0 && k <= seqlen / 2
-    return [seq[i:i+k-1] for i in 1:seqlen-k+1]
-end
-
-
 function entropy_shannon(input_data, k::Int=1, norm::Bool=false)
 
     if k > 1
