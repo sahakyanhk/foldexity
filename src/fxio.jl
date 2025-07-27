@@ -199,7 +199,7 @@ function pdb2pdbmatrix(pdb)
     return pdbmatrix
 end
 
-function pdb2xyz_new(pdb::PDBdata)
+function pdb2xyz(pdb::PDBdata)
 
     function add_virtual_site(A,B,C)
         # Vector from A to C
@@ -230,9 +230,6 @@ function pdb2xyz_new(pdb::PDBdata)
 end
 
 
-function pdb2xyz(pdb)
-    return hcat(pdb.x, pdb.y, pdb.z)    
-end
 
 function pdb2fasta(pdb)
 
