@@ -11,26 +11,21 @@ function fxpdb(pdbpath::String, ksize::Int = 4, kmertype::String = "knn", cutoff
     
     if kmertype == "knn" || kmertype == "k_nearest_neigbors" 
         fragmeter = coords2knn
-        readpdb = readpdb_calpha
     elseif kmertype == "seq" || kmertype == "sequencial"
         fragmeter = coords2kmers
-        if ksize < 4 
-            readpdb =  readpdb_backbone #readpdb_calpha
-        else 
-            readpdb = readpdb_backbone
-        end
     else 
         println("Warninin unknown fragmenter, k_nearest_neigbors will be used")
     end
 
     pdb = readpdb_backbone(pdbpath)
+
     if missing_residues(pdb)
         println("Warning: $pdbpath probably has missing residues, check the file")
     end
 
-    xyzcoords = pdb2xyz(pdb)
+    CA_indeces, N_xyz, CA_xyz, C_xyz, V_xyz  = pdb2xyz_new(pdb) #xyzcoords in xyz for CA 
     
-    megax = fragmeter(xyzcoords, ksize)
+    megax = fragmeter(CA_xyz, ksize, 0,  N_xyz, C_xyz, V_xyz)
     
     foldexity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix = fxity_kabsh(megax, cutoff)
     return foldexity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix
@@ -42,14 +37,10 @@ function fxdir(dirpath, outfile = "fxdata.tsv", ksize=4, kmertype = "seq", cutof
 
     if kmertype == "knn" || kmertype == "k_nearest_neigbors" 
         fragmeter = coords2knn
-        readpdb = readpdb_calpha
+
     elseif kmertype == "seq" || kmertype == "sequencial"
         fragmeter = coords2kmers
-        if ksize < 4 
-            readpdb = readpdb_backbone
-        else 
-            readpdb = readpdb_calpha
-        end
+
     else 
         println("Warninin unknown fragmenter, k_nearest_neigbors will be used")
     end
@@ -75,17 +66,16 @@ function fxdir(dirpath, outfile = "fxdata.tsv", ksize=4, kmertype = "seq", cutof
     end
 
     #start loop with muptithreading
-    Threads.@threads for pdbpath in ProgressBar(pdbpaths)
+    Threads.@threads for pdbpath in pdbpaths
         try     
-            pdb = readpdb(pdbpath)
+            pdb = readpdb_backbone(pdbpath)
             if missing_residues(pdb)
                 println("Warning: $pdbpath probably has missing residues, skipping")
                 continue
             end
-            xyzcoords = pdb2xyz(pdb)
-#            megax = coords2knn(xyzcoords, ksize)
-            megax = fragmeter(xyzcoords, ksize)
-            foldexity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix  = fxity_kabsh(megax, cutoff)
+            CA_indeces, N_xyz, CA_xyz, C_xyz, V_xyz  = pdb2xyz_new(pdb) #xyzcoords in xyz for CA 
+            megax = fragmeter(CA_xyz, ksize, 0, N_xyz, C_xyz, V_xyz)
+            foldexity, aver_rmsd, nclusts, norm_nclusts, nfrags, matrix = fxity_kabsh(megax, cutoff)
             data = "$i\t$pdbpath\t$foldexity\t$aver_rmsd\t$nclusts\t$norm_nclusts\t$nfrags\n"
             push!(data_collector, data)
         catch 

@@ -199,6 +199,37 @@ function pdb2pdbmatrix(pdb)
     return pdbmatrix
 end
 
+function pdb2xyz_new(pdb::PDBdata)
+
+    function add_virtual_site(A,B,C)
+        # Vector from A to C
+        AC = C - A
+        # Vector from A to B
+        AB = B - A
+        # Project vector AB onto AC to get foot of perpendicular D
+        t = dot(AB, AC) / dot(AC, AC)
+        D = A + t * AC  # Foot of the perpendicular from B to line AC
+        # Vector from D to B
+        DB = B - D
+        # Extend from D in the direction of B by twice the length of the height
+        V = D + 4 * DB
+        return V
+    end
+
+    N_ndx = pdb.atomname .== "N"
+    CA_ndx = pdb.atomname .== "CA"
+    C_ndx = pdb.atomname .== "C"    
+    CA_indeces = pdb.index[CA_ndx]
+    N_xyz = hcat(pdb.x[N_ndx], pdb.y[N_ndx], pdb.z[N_ndx])   
+    CA_xyz = hcat(pdb.x[CA_ndx], pdb.y[CA_ndx], pdb.z[CA_ndx])   
+    C_xyz = hcat(pdb.x[C_ndx], pdb.y[C_ndx], pdb.z[C_ndx])   
+
+    V_xyz = add_virtual_site(N_xyz, CA_xyz, C_xyz)
+
+    return CA_indeces, N_xyz, CA_xyz, C_xyz, V_xyz
+end
+
+
 function pdb2xyz(pdb)
     return hcat(pdb.x, pdb.y, pdb.z)    
 end
@@ -269,51 +300,54 @@ function distancematrix(xyzcoords::Matrix, min_seq_dist::Int = 0)::Matrix
 end
 
 
-function matrix_knn(D::Matrix, k::Int=10)::Matrix
+function knn_form_distance_matrix(D::Matrix, k::Int=10)::Matrix
     # returns k nearest neighbors from a distance matrix
     return mapslices(x -> partialsortperm(x, 1:k), D, dims=2) 
 end
 
 
-function coords2knn(xyzcoords::Matrix, wordsize::Int=6, min_seq_dist::Int=0)::Vector{Matrix}
+
+function coords2knn(CA_xyz::Matrix=none, wordsize::Int=6, min_seq_dist::Int=0, N_xyz::Matrix=none, C_xyz::Matrix=none, V_xyz::Matrix=none)::Vector{Matrix}
     # returns coordinates corresponding to knn indexes
-    nxyz = size(xyzcoords, 1)
-    distmatrix = distancematrix(xyzcoords, min_seq_dist)
-    neighbor_list_index = matrix_knn(distmatrix, wordsize)
-    
-    knnfragments = [xyzcoords[push!(neighbor_list_index[i,:], i),:] for i in 1:nxyz]
+    nxyz = size(CA_xyz, 1)
+    distmatrix = distancematrix(CA_xyz, min_seq_dist)
+    neighbor_list_index = knn_form_distance_matrix(distmatrix, wordsize)
+    #add a virtual site
+
+
+    #knnfragments = [CA_xyz[push!(neighbor_list_index[i,:], i),:] for i in 1:nxyz]
+    knnfragments = [vcat(N_xyz[neighbor_list_index[i,:],:], 
+                        CA_xyz[neighbor_list_index[i,:],:],
+                        C_xyz[neighbor_list_index[i,:],:],
+                        V_xyz[neighbor_list_index[i,:],:],
+                        ) for i in 1:nxyz]
 
     return knnfragments
 end
 
 
-function coords2kmers(matrix, wordsize=4,  filter="ca") 
+
+function coords2kmers(CA_xyz::Matrix=none, wordsize=4, offset=0, N_xyz::Matrix=none, C_xyz::Matrix=none, V_xyz::Matrix=none)::Vector{Matrix}
     #split matrix into fragments
     
-    if filter == "bb"
-        backbone_length = 3
-    elseif filter == "ca"
-        backbone_length = 1
-    else
-        error("Valid option are bb (backbone N, CA, C) or ca (CA only)")
-    end
-
-    wsize = wordsize * backbone_length # 4 backbone residue fragment contains 12 atoms (3 atoms for each residue: N, CA, C).
-    msize = size(matrix)[1]
+    backbone_length = 4 # N, CA, C, V
+    offset = offset
+    wsize = wordsize * backbone_length # 4 backbone residue fragment contains 16 atoms (4 atoms for each residue: N, CA, C, V).
+    msize = size(CA_xyz)[1]
     
-    matrixkmers = [matrix[i:i-1+wsize,:] for i=1:msize-wsize+1]
+    CA_xyz = vcat([m[i, :]' for i in 1:size(CA_xyz, 1) for m in (N_xyz, CA_xyz, C_xyz, V_xyz)]...)
 
-    return matrixkmers
+
+    kmerfragments = [CA_xyz[i:i-1+wsize,:] for i=1:msize-wsize+1]
+
+    return kmerfragments
 end
 
 
-function seq2kmers(seq, wsize=4) 
-    #split matrix into fragments
-
+function split2kmers(seq, k::Int)
     seqlen = length(seq)
-    seqkmers = [seq[i:i-1+wsize] for i=1:seqlen-wsize+1]
-
-    return seqkmers
+    @assert k > 0 && k <= seqlen / 2
+    return [seq[i:i+k-1] for i in 1:seqlen-k+1]
 end
 
 
